@@ -127,6 +127,10 @@ Host *
     Write-Skip "SSH config (already exists)"
 }
 
+# Force Git to use Windows OpenSSH (not Git Bash's bundled SSH)
+git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+Write-Success "Git configured to use Windows OpenSSH"
+
 # Verify SSH works
 Write-Host "    Testing SSH connection to GitHub..."
 $sshTest = ssh -T git@github.com 2>&1
@@ -250,12 +254,14 @@ if (-not $SkipGitConfig) {
         git config --global user.email $identity.email
         git config --global init.defaultBranch main
         git config --global core.autocrlf true
+        git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 
         Write-Success "Git configured"
         Write-Host "    user.name: $($identity.name)"
         Write-Host "    user.email: $($identity.email)"
         Write-Host "    init.defaultBranch: main"
         Write-Host "    core.autocrlf: true"
+        Write-Host "    core.sshCommand: Windows OpenSSH (for 1Password)"
     } else {
         Write-Host "    [ERROR] identity.json not found in config repo" -ForegroundColor Red
         exit 1
