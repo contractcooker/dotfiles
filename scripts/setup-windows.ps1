@@ -159,25 +159,30 @@ if (-not $claudeInstalled) {
 # Step 5: Authenticate GitHub CLI
 Write-Step "Authenticating GitHub CLI"
 
-Write-Host "    Checking current auth status..."
-$ErrorActionPreference = "Continue"
-gh auth status 2>$null | Out-Null
-$authStatus = $LASTEXITCODE
-$ErrorActionPreference = "Stop"
-if ($authStatus -eq 0) {
-    Write-Skip "Already authenticated with GitHub"
-} else {
-    Write-Host "    Not authenticated. Starting login flow..."
-    Write-Host "    Running: gh auth login --web --git-protocol ssh --skip-ssh-key"
-    Write-Host ""
-    gh auth login --web --git-protocol ssh --skip-ssh-key
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "GitHub authenticated"
+try {
+    $ErrorActionPreference = "SilentlyContinue"
+    Write-Host "    Checking current auth status..."
+    & gh auth status *>$null
+    $authStatus = $LASTEXITCODE
+    $ErrorActionPreference = "Stop"
+
+    if ($authStatus -eq 0) {
+        Write-Skip "Already authenticated with GitHub"
     } else {
-        Write-Host "    [ERROR] GitHub authentication failed" -ForegroundColor Red
-        Write-Host "    Try running manually: gh auth login --web --git-protocol ssh --skip-ssh-key" -ForegroundColor Yellow
-        exit 1
+        Write-Host "    Not authenticated. Starting login flow..."
+        Write-Host ""
+        & gh auth login --web --git-protocol ssh --skip-ssh-key
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "GitHub authenticated"
+        } else {
+            throw "GitHub authentication failed"
+        }
     }
+} catch {
+    $ErrorActionPreference = "Stop"
+    Write-Host "    [ERROR] GitHub authentication failed: $_" -ForegroundColor Red
+    Write-Host "    Try running manually: gh auth login --web --git-protocol ssh --skip-ssh-key" -ForegroundColor Yellow
+    exit 1
 }
 
 # Step 6: Clone config repo (private - needs auth first)
