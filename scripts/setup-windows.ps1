@@ -69,7 +69,22 @@ if (-not $SkipPackages) {
     Write-Success "PATH refreshed"
 }
 
-# Step 2: Configure 1Password SSH Agent
+# Step 2: Disable OpenSSH Agent (conflicts with 1Password SSH Agent)
+Write-Step "Disabling OpenSSH Agent"
+
+$sshAgent = Get-Service ssh-agent -ErrorAction SilentlyContinue
+if ($sshAgent) {
+    if ($sshAgent.Status -eq 'Running') {
+        Stop-Service ssh-agent
+        Write-Host "    Stopped ssh-agent service"
+    }
+    Set-Service ssh-agent -StartupType Disabled
+    Write-Success "OpenSSH Agent disabled (1Password will handle SSH)"
+} else {
+    Write-Skip "OpenSSH Agent not installed"
+}
+
+# Step 3: Configure 1Password SSH Agent
 Write-Step "1Password SSH Agent Setup"
 Write-Host ""
 Write-Host "    ACTION REQUIRED:" -ForegroundColor Yellow
@@ -80,7 +95,7 @@ Write-Host ""
 Read-Host "    Press Enter when done"
 Write-Success "1Password SSH Agent configured"
 
-# Step 3: Install Node.js (via fnm) and Claude Code
+# Step 4: Install Node.js (via fnm) and Claude Code
 Write-Step "Setting up Node.js and Claude Code"
 
 $fnmInstalled = winget list --id Schniz.fnm 2>$null | Select-String "Schniz.fnm"
@@ -136,7 +151,7 @@ if (-not $claudeInstalled) {
     Write-Skip "Claude Code (already installed)"
 }
 
-# Step 4: Authenticate GitHub CLI
+# Step 5: Authenticate GitHub CLI
 Write-Step "Authenticating GitHub CLI"
 
 $ghStatus = gh auth status 2>&1
@@ -148,7 +163,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Success "GitHub authenticated"
 }
 
-# Step 5: Clone config repo (private - needs auth first)
+# Step 6: Clone config repo (private - needs auth first)
 Write-Step "Setting up config"
 
 if (-not (Test-Path "$reposRoot\dev")) {
@@ -165,7 +180,7 @@ if (-not (Test-Path $configPath)) {
     Write-Skip "config (already exists)"
 }
 
-# Step 6: Configure Git from config
+# Step 7: Configure Git from config
 if (-not $SkipGitConfig) {
     Write-Step "Configuring Git"
 
@@ -189,7 +204,7 @@ if (-not $SkipGitConfig) {
     }
 }
 
-# Step 7: Clone dotfiles and other repos
+# Step 8: Clone dotfiles and other repos
 if (-not $SkipRepos) {
     Write-Step "Setting up repos"
 
@@ -209,7 +224,7 @@ if (-not $SkipRepos) {
     & "$dotfilesPath\scripts\clone-repos.ps1"
 }
 
-# Step 8: SSH config for 1Password
+# Step 9: SSH config for 1Password
 Write-Step "SSH Configuration"
 
 $sshConfigPath = "$HOME\.ssh\config"
