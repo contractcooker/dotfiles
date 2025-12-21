@@ -159,13 +159,22 @@ if (-not $claudeInstalled) {
 # Step 5: Authenticate GitHub CLI
 Write-Step "Authenticating GitHub CLI"
 
+Write-Host "    Checking current auth status..."
 $ghStatus = gh auth status 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-Skip "Already authenticated with GitHub"
 } else {
-    Write-Host "    Opening browser for GitHub authentication..."
+    Write-Host "    Not authenticated. Starting login flow..."
+    Write-Host "    Running: gh auth login --web --git-protocol ssh --skip-ssh-key"
+    Write-Host ""
     gh auth login --web --git-protocol ssh --skip-ssh-key
-    Write-Success "GitHub authenticated"
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "GitHub authenticated"
+    } else {
+        Write-Host "    [ERROR] GitHub authentication failed" -ForegroundColor Red
+        Write-Host "    Try running manually: gh auth login --web --git-protocol ssh --skip-ssh-key" -ForegroundColor Yellow
+        exit 1
+    }
 }
 
 # Step 6: Clone config repo (private - needs auth first)
