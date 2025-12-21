@@ -141,6 +141,21 @@ else
     npm install -g @anthropic-ai/claude-code
     echo "    [OK] Claude Code installed"
 fi
+# Configure Claude Code global settings
+CLAUDE_DIR="$HOME/.claude"
+CLAUDE_SETTINGS="$CLAUDE_DIR/CLAUDE.md"
+mkdir -p "$CLAUDE_DIR"
+if [ -L "$CLAUDE_SETTINGS" ]; then
+    echo "    [SKIP] Claude global settings (symlink exists)"
+elif [ -f "$CLAUDE_SETTINGS" ]; then
+    echo "    [WARN] Claude settings exists as file, backing up and symlinking"
+    mv "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
+    ln -sf "$DOTFILES_PATH/claude/global.md" "$CLAUDE_SETTINGS"
+    echo "    [OK] Claude global settings symlinked"
+else
+    ln -sf "$DOTFILES_PATH/claude/global.md" "$CLAUDE_SETTINGS"
+    echo "    [OK] Claude global settings symlinked"
+fi
 
 # Step 5: Authenticate GitHub CLI
 echo ""
