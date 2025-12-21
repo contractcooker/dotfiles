@@ -131,13 +131,16 @@ Host *
 git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 Write-Success "Git configured to use Windows OpenSSH"
 
-# Verify SSH works
+# Verify SSH works (ssh -T returns exit code 1 even on success, so we check output)
 Write-Host "    Testing SSH connection to GitHub..."
-$sshTest = ssh -T git@github.com 2>&1
+$ErrorActionPreference = "SilentlyContinue"
+$sshTest = ssh -T git@github.com 2>&1 | Out-String
+$ErrorActionPreference = "Stop"
 if ($sshTest -match "successfully authenticated") {
     Write-Success "SSH authentication working"
 } else {
-    Write-Host "    [WARN] SSH test inconclusive. You may need to authorize the key in 1Password." -ForegroundColor Yellow
+    Write-Host "    [WARN] SSH test failed. You may need to authorize the key in 1Password." -ForegroundColor Yellow
+    Write-Host "    $sshTest" -ForegroundColor Yellow
 }
 
 # Step 5: Install Node.js (via fnm) and Claude Code
