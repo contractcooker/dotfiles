@@ -77,7 +77,19 @@ if [ "$SKIP_PACKAGES" = false ]; then
     fi
 fi
 
-# Step 3: Install Node.js (via fnm) and Claude Code
+# Step 3: Configure 1Password SSH Agent
+echo ""
+echo "==> 1Password SSH Agent Setup"
+echo ""
+echo "    ACTION REQUIRED:"
+echo "      1. Open 1Password"
+echo "      2. Go to Settings > Developer"
+echo "      3. Enable 'Use the SSH Agent'"
+echo ""
+read -p "    Press Enter when done"
+echo "    [OK] 1Password SSH Agent configured"
+
+# Step 4: Install Node.js (via fnm) and Claude Code
 echo ""
 echo "==> Setting up Node.js and Claude Code"
 
@@ -130,7 +142,7 @@ else
     echo "    [OK] Claude Code installed"
 fi
 
-# Step 4: Authenticate GitHub CLI
+# Step 5: Authenticate GitHub CLI
 echo ""
 echo "==> Authenticating GitHub CLI"
 
@@ -142,7 +154,7 @@ else
     echo "    [OK] GitHub authenticated"
 fi
 
-# Step 5: Clone config repo (private - needs auth first)
+# Step 6: Clone config repo (private - needs auth first)
 echo ""
 echo "==> Setting up config"
 
@@ -157,7 +169,7 @@ else
     echo "    [SKIP] config (already exists)"
 fi
 
-# Step 6: Configure Git from config
+# Step 7: Configure Git from config
 if [ "$SKIP_GIT_CONFIG" = false ]; then
     echo ""
     echo "==> Configuring Git"
@@ -180,7 +192,7 @@ if [ "$SKIP_GIT_CONFIG" = false ]; then
     fi
 fi
 
-# Step 7: Clone dotfiles and other repos
+# Step 8: Clone dotfiles and other repos
 if [ "$SKIP_REPOS" = false ]; then
     echo ""
     echo "==> Setting up repos"
@@ -200,7 +212,7 @@ if [ "$SKIP_REPOS" = false ]; then
     "$DOTFILES_PATH/scripts/clone-repos.sh"
 fi
 
-# Step 8: SSH config for 1Password
+# Step 9: SSH config for 1Password
 echo ""
 echo "==> SSH Configuration"
 
@@ -248,7 +260,7 @@ else
     echo "    [SKIP] SSH config (already exists)"
 fi
 
-# Step 9: Install full Brewfile (optional)
+# Step 10: Install full Brewfile (optional)
 echo ""
 echo "==> Brewfile"
 

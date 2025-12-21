@@ -69,7 +69,18 @@ if (-not $SkipPackages) {
     Write-Success "PATH refreshed"
 }
 
-# Step 2: Install Node.js (via fnm) and Claude Code
+# Step 2: Configure 1Password SSH Agent
+Write-Step "1Password SSH Agent Setup"
+Write-Host ""
+Write-Host "    ACTION REQUIRED:" -ForegroundColor Yellow
+Write-Host "      1. Open 1Password"
+Write-Host "      2. Go to Settings > Developer"
+Write-Host "      3. Enable 'Use the SSH Agent'"
+Write-Host ""
+Read-Host "    Press Enter when done"
+Write-Success "1Password SSH Agent configured"
+
+# Step 3: Install Node.js (via fnm) and Claude Code
 Write-Step "Setting up Node.js and Claude Code"
 
 $fnmInstalled = winget list --id Schniz.fnm 2>$null | Select-String "Schniz.fnm"
@@ -125,7 +136,7 @@ if (-not $claudeInstalled) {
     Write-Skip "Claude Code (already installed)"
 }
 
-# Step 3: Authenticate GitHub CLI
+# Step 4: Authenticate GitHub CLI
 Write-Step "Authenticating GitHub CLI"
 
 $ghStatus = gh auth status 2>&1
@@ -137,7 +148,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Success "GitHub authenticated"
 }
 
-# Step 4: Clone config repo (private - needs auth first)
+# Step 5: Clone config repo (private - needs auth first)
 Write-Step "Setting up config"
 
 if (-not (Test-Path "$reposRoot\dev")) {
@@ -154,7 +165,7 @@ if (-not (Test-Path $configPath)) {
     Write-Skip "config (already exists)"
 }
 
-# Step 5: Configure Git from config
+# Step 6: Configure Git from config
 if (-not $SkipGitConfig) {
     Write-Step "Configuring Git"
 
@@ -178,7 +189,7 @@ if (-not $SkipGitConfig) {
     }
 }
 
-# Step 6: Clone dotfiles and other repos
+# Step 7: Clone dotfiles and other repos
 if (-not $SkipRepos) {
     Write-Step "Setting up repos"
 
@@ -198,7 +209,7 @@ if (-not $SkipRepos) {
     & "$dotfilesPath\scripts\clone-repos.ps1"
 }
 
-# Step 7: SSH config for 1Password
+# Step 8: SSH config for 1Password
 Write-Step "SSH Configuration"
 
 $sshConfigPath = "$HOME\.ssh\config"
