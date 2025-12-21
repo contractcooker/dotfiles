@@ -131,19 +131,6 @@ Host *
 git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 Write-Success "Git configured to use Windows OpenSSH"
 
-# Verify SSH works (ssh -T returns exit code 1 even on success, so we check output)
-Write-Host "    Testing SSH connection to GitHub..."
-try {
-    $sshTest = cmd /c "ssh -T git@github.com 2>&1"
-    if ($sshTest -match "successfully authenticated") {
-        Write-Success "SSH authentication working"
-    } else {
-        Write-Host "    [WARN] SSH test failed: $sshTest" -ForegroundColor Yellow
-    }
-} catch {
-    Write-Host "    [WARN] SSH test inconclusive" -ForegroundColor Yellow
-}
-
 # Step 5: Install Node.js (via fnm) and Claude Code
 Write-Step "Setting up Node.js and Claude Code"
 
