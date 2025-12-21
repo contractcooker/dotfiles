@@ -68,8 +68,64 @@ if (-not $SkipPackages) {
     Write-Success "PATH refreshed"
 }
 
-# Step 2: Authenticate GitHub CLI
-Write-Step "Checking GitHub CLI authentication"
+# Step 2: Install Node.js (via fnm) and Claude Code
+Write-Step "Setting up Node.js and Claude Code"
+
+$fnmInstalled = winget list --id Schniz.fnm 2>$null | Select-String "Schniz.fnm"
+if (-not $fnmInstalled) {
+    Write-Host "    Installing fnm (Node version manager)..."
+    winget install --id Schniz.fnm --accept-source-agreements --accept-package-agreements
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    Write-Success "fnm installed"
+} else {
+    Write-Skip "fnm (already installed)"
+}
+
+# Initialize fnm for this session
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+
+# Add fnm to PowerShell profile if not already there
+$profilePath = $PROFILE
+$fnmInit = 'fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression'
+if (Test-Path $profilePath) {
+    $profileContent = Get-Content $profilePath -Raw
+    if ($profileContent -notmatch "fnm env") {
+        Add-Content -Path $profilePath -Value "`n# fnm (Node version manager)`n$fnmInit"
+        Write-Success "fnm added to PowerShell profile"
+    } else {
+        Write-Skip "fnm already in PowerShell profile"
+    }
+} else {
+    New-Item -ItemType File -Path $profilePath -Force | Out-Null
+    Add-Content -Path $profilePath -Value "# fnm (Node version manager)`n$fnmInit"
+    Write-Success "PowerShell profile created with fnm"
+}
+
+# Install Node.js LTS
+$nodeInstalled = fnm list 2>$null | Select-String "lts"
+if (-not $nodeInstalled) {
+    Write-Host "    Installing Node.js LTS..."
+    fnm install --lts
+    fnm use lts-latest
+    fnm default lts-latest
+    Write-Success "Node.js LTS installed"
+} else {
+    fnm use lts-latest 2>$null
+    Write-Skip "Node.js LTS (already installed)"
+}
+
+# Install Claude Code
+$claudeInstalled = npm list -g @anthropic-ai/claude-code 2>$null | Select-String "claude-code"
+if (-not $claudeInstalled) {
+    Write-Host "    Installing Claude Code..."
+    npm install -g @anthropic-ai/claude-code
+    Write-Success "Claude Code installed"
+} else {
+    Write-Skip "Claude Code (already installed)"
+}
+
+# Step 3: Authenticate GitHub CLI
+Write-Step "Authenticating GitHub CLI"
 
 $ghStatus = gh auth status 2>&1
 if ($LASTEXITCODE -eq 0) {
@@ -80,7 +136,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Success "GitHub authenticated"
 }
 
-# Step 3: Clone config repo (private - needs auth first)
+# Step 4: Clone config repo (private - needs auth first)
 Write-Step "Setting up config"
 
 if (-not (Test-Path "$reposRoot\dev")) {
@@ -97,7 +153,7 @@ if (-not (Test-Path $configPath)) {
     Write-Skip "config (already exists)"
 }
 
-# Step 4: Configure Git from config
+# Step 5: Configure Git from config
 if (-not $SkipGitConfig) {
     Write-Step "Configuring Git"
 
@@ -121,7 +177,7 @@ if (-not $SkipGitConfig) {
     }
 }
 
-# Step 5: Clone dotfiles and other repos
+# Step 6: Clone dotfiles and other repos
 if (-not $SkipRepos) {
     Write-Step "Setting up repos"
 
@@ -141,7 +197,7 @@ if (-not $SkipRepos) {
     & "$dotfilesPath\scripts\clone-repos.ps1"
 }
 
-# Step 6: SSH config for 1Password
+# Step 7: SSH config for 1Password
 Write-Step "SSH Configuration"
 
 $sshConfigPath = "$HOME\.ssh\config"
