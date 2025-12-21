@@ -72,7 +72,9 @@ foreach ($repo in $manifest.repos) {
 
     Write-Host "  [clone] $displayPath" -ForegroundColor Green
     Push-Location $targetDir
-    gh repo clone "contractcooker/$($repo.name)" 2>&1 | Out-Null
+    $ErrorActionPreference = "SilentlyContinue"
+    gh repo clone "contractcooker/$($repo.name)" *>$null
+    $ErrorActionPreference = "Stop"
     Pop-Location
     $clonedCount++
 }
