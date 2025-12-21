@@ -170,8 +170,9 @@ try {
         Write-Skip "Already authenticated with GitHub"
     } else {
         Write-Host "    Not authenticated. Starting login flow..."
+        Write-Host "    (Code will be copied to clipboard automatically)"
         Write-Host ""
-        & gh auth login --web --git-protocol ssh --skip-ssh-key
+        & gh auth login --web --git-protocol ssh --skip-ssh-key --clipboard
         if ($LASTEXITCODE -eq 0) {
             Write-Success "GitHub authenticated"
         } else {
