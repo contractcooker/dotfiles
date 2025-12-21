@@ -47,6 +47,7 @@ if (-not $SkipPackages) {
     Write-Step "Installing packages via winget"
 
     $packages = @(
+        "AgileBits.1Password",
         "Git.Git",
         "GitHub.cli",
         "Microsoft.WindowsTerminal"

@@ -66,6 +66,15 @@ if [ "$SKIP_PACKAGES" = false ]; then
             echo "    [OK] $pkg"
         fi
     done
+
+    # Install 1Password (cask)
+    if brew list --cask 1password &> /dev/null; then
+        echo "    [SKIP] 1password (already installed)"
+    else
+        echo "    Installing 1password..."
+        brew install --cask 1password
+        echo "    [OK] 1password"
+    fi
 fi
 
 # Step 3: Install Node.js (via fnm) and Claude Code
