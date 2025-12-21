@@ -100,38 +100,7 @@ Write-Host ""
 Read-Host "    Press Enter when done"
 Write-Success "1Password SSH Agent configured"
 
-# Step 4: Create SSH config for 1Password
-Write-Step "SSH Configuration"
-
-$sshConfigPath = "$HOME\.ssh\config"
-$sshDir = "$HOME\.ssh"
-
-if (-not (Test-Path $sshDir)) {
-    New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
-}
-
-if (-not (Test-Path $sshConfigPath)) {
-    $sshConfig = @"
-# Git services
-Host github.com
-  HostName github.com
-  User git
-
-# Default settings - 1Password agent for all connections
-Host *
-  IdentityAgent "\\.\pipe\openssh-ssh-agent"
-"@
-    $sshConfig | Out-File -FilePath $sshConfigPath -Encoding utf8
-    Write-Success "SSH config created"
-} else {
-    Write-Skip "SSH config (already exists)"
-}
-
-# Force Git to use Windows OpenSSH (not Git Bash's bundled SSH)
-git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
-Write-Success "Git configured to use Windows OpenSSH"
-
-# Step 5: Install Node.js (via fnm) and Claude Code
+# Step 4: Install Node.js (via fnm) and Claude Code
 Write-Step "Setting up Node.js and Claude Code"
 
 $fnmInstalled = winget list --id Schniz.fnm 2>$null | Select-String "Schniz.fnm"
@@ -187,7 +156,7 @@ if (-not $claudeInstalled) {
     Write-Skip "Claude Code (already installed)"
 }
 
-# Step 6: Authenticate GitHub CLI
+# Step 5: Authenticate GitHub CLI
 Write-Step "Authenticating GitHub CLI"
 
 try {
@@ -216,7 +185,7 @@ try {
     exit 1
 }
 
-# Step 7: Clone config repo (private - needs auth first)
+# Step 6: Clone config repo (private - needs auth first)
 Write-Step "Setting up config"
 
 if (-not (Test-Path "$reposRoot\dev")) {
@@ -233,7 +202,7 @@ if (-not (Test-Path $configPath)) {
     Write-Skip "config (already exists)"
 }
 
-# Step 8: Configure Git from config
+# Step 7: Configure Git from config
 if (-not $SkipGitConfig) {
     Write-Step "Configuring Git"
 
@@ -259,6 +228,62 @@ if (-not $SkipGitConfig) {
     }
 }
 
+
+# Step 8: SSH Configuration (after config is cloned so we can read hosts.json)
+Write-Step "SSH Configuration"
+
+$sshConfigPath = "$HOME\.ssh\config"
+$sshDir = "$HOME\.ssh"
+
+if (-not (Test-Path $sshDir)) {
+    New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+}
+
+if (-not (Test-Path $sshConfigPath)) {
+    $hostsPath = "$configPath\hosts.json"
+    if (Test-Path $hostsPath) {
+        $hosts = Get-Content $hostsPath | ConvertFrom-Json
+        $homelabDomain = $hosts.homelab_domain
+        $homelabUser = $hosts.homelab_user
+
+        $sshConfig = @"
+# Git services
+Host github.com
+  HostName github.com
+  User git
+
+# Homelab servers
+Host *.$homelabDomain
+  User $homelabUser
+
+# Default settings - 1Password agent for all connections
+Host *
+  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+"@
+        $sshConfig | Out-File -FilePath $sshConfigPath -Encoding utf8
+        Write-Success "SSH config created (with homelab)"
+    } else {
+        Write-Host "    [WARN] hosts.json not found, creating minimal SSH config" -ForegroundColor Yellow
+        $sshConfig = @"
+# Git services
+Host github.com
+  HostName github.com
+  User git
+
+# Default settings - 1Password agent for all connections
+Host *
+  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+"@
+        $sshConfig | Out-File -FilePath $sshConfigPath -Encoding utf8
+        Write-Success "SSH config created (minimal)"
+    }
+} else {
+    Write-Skip "SSH config (already exists)"
+}
+
+# Force Git to use Windows OpenSSH (not Git Bash's bundled SSH)
+git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+Write-Success "Git configured to use Windows OpenSSH"
 # Step 9: Clone dotfiles and other repos
 if (-not $SkipRepos) {
     Write-Step "Setting up repos"
