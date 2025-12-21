@@ -63,8 +63,9 @@ if (-not $SkipPackages) {
         }
     }
 
-    Write-Host ""
-    Write-Host "    NOTE: Restart your terminal to pick up new PATH entries" -ForegroundColor Yellow
+    # Refresh PATH to pick up newly installed tools
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    Write-Success "PATH refreshed"
 }
 
 # Step 2: Authenticate GitHub CLI
