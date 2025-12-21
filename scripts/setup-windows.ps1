@@ -159,26 +159,14 @@ if (-not $claudeInstalled) {
 # Configure Claude Code global settings
 $claudeDir = "$HOME\.claude"
 $claudeSettings = "$claudeDir\CLAUDE.md"
-$claudeSource = "$dotfilesPath\claude\global.md"
 
 if (-not (Test-Path $claudeDir)) {
     New-Item -ItemType Directory -Path $claudeDir -Force | Out-Null
 }
 
-if (Test-Path $claudeSettings) {
-    $item = Get-Item $claudeSettings -Force
-    if ($item.LinkType -eq "SymbolicLink") {
-        Write-Skip "Claude global settings (symlink exists)"
-    } else {
-        Write-Host "    [WARN] Claude settings exists as file, backing up and symlinking" -ForegroundColor Yellow
-        Move-Item $claudeSettings "$claudeSettings.backup"
-        New-Item -ItemType SymbolicLink -Path $claudeSettings -Target $claudeSource | Out-Null
-        Write-Success "Claude global settings symlinked"
-    }
-} else {
-    New-Item -ItemType SymbolicLink -Path $claudeSettings -Target $claudeSource | Out-Null
-    Write-Success "Claude global settings symlinked"
-}
+# Concatenate global + windows-specific settings
+Get-Content "$dotfilesPath\claude\global.md", "$dotfilesPath\claude\windows.md" | Set-Content $claudeSettings
+Write-Success "Claude global settings configured"
 
 # Step 5: Authenticate GitHub CLI
 Write-Step "Authenticating GitHub CLI"
