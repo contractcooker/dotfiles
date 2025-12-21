@@ -1,0 +1,86 @@
+#!/bin/bash
+# Create a new GitHub repo with standard settings
+# Usage: gh-create <repo-name> [description]
+#
+# Creates a private repo from the current directory with:
+# - Wiki disabled
+# - Projects disabled
+# - Discussions disabled
+# - Issues enabled
+# - Auto-adds entry to repos.json manifest
+
+set -e
+
+REPOS_ROOT="${REPOS_ROOT:-$HOME/repos}"
+CONFIG_PATH="$REPOS_ROOT/dev/config"
+MANIFEST_PATH="$CONFIG_PATH/repos.json"
+
+if [ -z "$1" ]; then
+    echo "Usage: gh-create <repo-name> [description]"
+    echo "Run from the root of your local git repo"
+    exit 1
+fi
+
+REPO_NAME="$1"
+DESCRIPTION="${2:-}"
+
+# Create repo and push
+if [ -n "$DESCRIPTION" ]; then
+    gh repo create "$REPO_NAME" --private --source=. --remote=origin --push --description "$DESCRIPTION"
+else
+    gh repo create "$REPO_NAME" --private --source=. --remote=origin --push
+fi
+
+# Apply standard settings
+gh repo edit --enable-wiki=false --enable-projects=false --enable-discussions=false
+
+echo "Repository created: https://github.com/$(gh api user --jq .login)/$REPO_NAME"
+
+# Add to repos.json manifest
+if [ -f "$MANIFEST_PATH" ] && command -v jq &> /dev/null; then
+    # Determine folder relative to repos root
+    CURRENT_DIR="$(pwd)"
+    PARENT_DIR="$(dirname "$CURRENT_DIR")"
+
+    if [[ "$PARENT_DIR" == "$REPOS_ROOT" ]]; then
+        FOLDER=""
+    elif [[ "$PARENT_DIR" == "$REPOS_ROOT/"* ]]; then
+        FOLDER="${PARENT_DIR#$REPOS_ROOT/}"
+    else
+        echo "Warning: Not in repos directory, skipping manifest update"
+        exit 0
+    fi
+
+    # Check if repo already exists in manifest
+    EXISTS=$(jq --arg name "$REPO_NAME" '.repos[] | select(.name == $name) | .name' "$MANIFEST_PATH")
+    if [ -n "$EXISTS" ]; then
+        echo "Repo already in manifest"
+        exit 0
+    fi
+
+    # Add new entry
+    TEMP_FILE=$(mktemp)
+    jq --arg name "$REPO_NAME" \
+       --arg folder "$FOLDER" \
+       --arg desc "$DESCRIPTION" \
+       '.repos += [{"name": $name, "folder": $folder, "status": "active", "description": $desc}]' \
+       "$MANIFEST_PATH" > "$TEMP_FILE" && mv "$TEMP_FILE" "$MANIFEST_PATH"
+
+    echo "Added to repos.json manifest"
+
+    # Commit manifest update
+    pushd "$CONFIG_PATH" > /dev/null
+    git add repos.json
+    git commit -m "Add $REPO_NAME to repos manifest"
+    git push
+    popd > /dev/null
+
+    echo "Manifest committed and pushed"
+else
+    if [ ! -f "$MANIFEST_PATH" ]; then
+        echo "Warning: repos.json not found at $MANIFEST_PATH"
+    fi
+    if ! command -v jq &> /dev/null; then
+        echo "Warning: jq not installed, skipping manifest update"
+    fi
+fi
