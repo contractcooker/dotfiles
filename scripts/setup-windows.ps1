@@ -160,8 +160,9 @@ if (-not $claudeInstalled) {
 Write-Step "Authenticating GitHub CLI"
 
 Write-Host "    Checking current auth status..."
-$ghStatus = gh auth status 2>&1
-if ($LASTEXITCODE -eq 0) {
+$null = gh auth status 2>&1
+$authStatus = $LASTEXITCODE
+if ($authStatus -eq 0) {
     Write-Skip "Already authenticated with GitHub"
 } else {
     Write-Host "    Not authenticated. Starting login flow..."
