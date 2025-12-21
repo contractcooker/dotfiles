@@ -68,9 +68,62 @@ if [ "$SKIP_PACKAGES" = false ]; then
     done
 fi
 
-# Step 3: Authenticate GitHub CLI
+# Step 3: Install Node.js (via fnm) and Claude Code
 echo ""
-echo "==> Checking GitHub CLI authentication"
+echo "==> Setting up Node.js and Claude Code"
+
+if brew list fnm &> /dev/null; then
+    echo "    [SKIP] fnm (already installed)"
+else
+    echo "    Installing fnm (Node version manager)..."
+    brew install fnm
+    echo "    [OK] fnm installed"
+fi
+
+# Initialize fnm for this session
+eval "$(fnm env --use-on-cd --shell bash)"
+
+# Add fnm to shell profile if not already there
+SHELL_PROFILE="$HOME/.zshrc"
+if [ -f "$SHELL_PROFILE" ]; then
+    if ! grep -q "fnm env" "$SHELL_PROFILE"; then
+        echo "" >> "$SHELL_PROFILE"
+        echo "# fnm (Node version manager)" >> "$SHELL_PROFILE"
+        echo 'eval "$(fnm env --use-on-cd --shell zsh)"' >> "$SHELL_PROFILE"
+        echo "    [OK] fnm added to .zshrc"
+    else
+        echo "    [SKIP] fnm already in .zshrc"
+    fi
+else
+    echo '# fnm (Node version manager)' > "$SHELL_PROFILE"
+    echo 'eval "$(fnm env --use-on-cd --shell zsh)"' >> "$SHELL_PROFILE"
+    echo "    [OK] .zshrc created with fnm"
+fi
+
+# Install Node.js LTS
+if fnm list 2>/dev/null | grep -q "lts"; then
+    fnm use lts-latest 2>/dev/null
+    echo "    [SKIP] Node.js LTS (already installed)"
+else
+    echo "    Installing Node.js LTS..."
+    fnm install --lts
+    fnm use lts-latest
+    fnm default lts-latest
+    echo "    [OK] Node.js LTS installed"
+fi
+
+# Install Claude Code
+if npm list -g @anthropic-ai/claude-code &> /dev/null; then
+    echo "    [SKIP] Claude Code (already installed)"
+else
+    echo "    Installing Claude Code..."
+    npm install -g @anthropic-ai/claude-code
+    echo "    [OK] Claude Code installed"
+fi
+
+# Step 4: Authenticate GitHub CLI
+echo ""
+echo "==> Authenticating GitHub CLI"
 
 if gh auth status &> /dev/null; then
     echo "    [SKIP] Already authenticated with GitHub"
@@ -80,7 +133,7 @@ else
     echo "    [OK] GitHub authenticated"
 fi
 
-# Step 4: Clone config repo (private - needs auth first)
+# Step 5: Clone config repo (private - needs auth first)
 echo ""
 echo "==> Setting up config"
 
@@ -95,7 +148,7 @@ else
     echo "    [SKIP] config (already exists)"
 fi
 
-# Step 5: Configure Git from config
+# Step 6: Configure Git from config
 if [ "$SKIP_GIT_CONFIG" = false ]; then
     echo ""
     echo "==> Configuring Git"
@@ -118,7 +171,7 @@ if [ "$SKIP_GIT_CONFIG" = false ]; then
     fi
 fi
 
-# Step 6: Clone dotfiles and other repos
+# Step 7: Clone dotfiles and other repos
 if [ "$SKIP_REPOS" = false ]; then
     echo ""
     echo "==> Setting up repos"
@@ -138,7 +191,7 @@ if [ "$SKIP_REPOS" = false ]; then
     "$DOTFILES_PATH/scripts/clone-repos.sh"
 fi
 
-# Step 7: SSH config for 1Password
+# Step 8: SSH config for 1Password
 echo ""
 echo "==> SSH Configuration"
 
@@ -186,7 +239,7 @@ else
     echo "    [SKIP] SSH config (already exists)"
 fi
 
-# Step 8: Install full Brewfile (optional)
+# Step 9: Install full Brewfile (optional)
 echo ""
 echo "==> Brewfile"
 
