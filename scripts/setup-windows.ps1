@@ -74,14 +74,19 @@ Write-Step "Disabling OpenSSH Agent"
 
 $sshAgent = Get-Service ssh-agent -ErrorAction SilentlyContinue
 if ($sshAgent) {
+    Write-Host "    Found OpenSSH Agent service (Status: $($sshAgent.Status), StartType: $($sshAgent.StartType))"
     if ($sshAgent.Status -eq 'Running') {
+        Write-Host "    Stopping ssh-agent service..."
         Stop-Service ssh-agent
         Write-Host "    Stopped ssh-agent service"
     }
-    Set-Service ssh-agent -StartupType Disabled
+    if ($sshAgent.StartType -ne 'Disabled') {
+        Write-Host "    Disabling ssh-agent service..."
+        Set-Service ssh-agent -StartupType Disabled
+    }
     Write-Success "OpenSSH Agent disabled (1Password will handle SSH)"
 } else {
-    Write-Skip "OpenSSH Agent not installed"
+    Write-Skip "OpenSSH Agent service not found"
 }
 
 # Step 3: Configure 1Password SSH Agent
