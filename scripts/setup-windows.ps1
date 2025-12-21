@@ -132,7 +132,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Skip "Already authenticated with GitHub"
 } else {
     Write-Host "    Opening browser for GitHub authentication..."
-    gh auth login --web --git-protocol ssh
+    gh auth login --web --git-protocol ssh --skip-ssh-key
     Write-Success "GitHub authenticated"
 }
 

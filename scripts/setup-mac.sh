@@ -129,7 +129,7 @@ if gh auth status &> /dev/null; then
     echo "    [SKIP] Already authenticated with GitHub"
 else
     echo "    Opening browser for GitHub authentication..."
-    gh auth login --web --git-protocol ssh
+    gh auth login --web --git-protocol ssh --skip-ssh-key
     echo "    [OK] GitHub authenticated"
 fi
 
