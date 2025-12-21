@@ -2,7 +2,7 @@
 # Run in PowerShell as Administrator
 #
 # Usage:
-#   irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
+#   irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 -OutFile $env:TEMP\setup.ps1; & $env:TEMP\setup.ps1; rm $env:TEMP\setup.ps1
 #
 # Or if you've already cloned dotfiles:
 #   .\setup-windows.ps1

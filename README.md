@@ -17,7 +17,7 @@ This installs Homebrew, Git, GitHub CLI, configures git, authenticates with GitH
 
 ```powershell
 # One-liner (run as Administrator)
-irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
+irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 -OutFile $env:TEMP\setup.ps1; & $env:TEMP\setup.ps1; rm $env:TEMP\setup.ps1
 ```
 
 This installs Git, GitHub CLI, Windows Terminal, configures git, authenticates with GitHub, and clones all active repos.

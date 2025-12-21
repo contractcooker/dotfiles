@@ -16,7 +16,7 @@ This guide mirrors the macOS setup but uses Windows-native tools where appropria
 
 ```powershell
 # One-liner (run as Administrator)
-irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
+irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 -OutFile $env:TEMP\setup.ps1; & $env:TEMP\setup.ps1; rm $env:TEMP\setup.ps1
 ```
 
 This will:
