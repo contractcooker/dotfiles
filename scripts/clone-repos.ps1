@@ -44,7 +44,7 @@ foreach ($repo in $manifest.repos) {
 
     if ($repo.folder) {
         $targetDir = Join-Path $ReposRoot $repo.folder
-        $displayPath = "$($repo.folder)\$($repo.name)"
+        $displayPath = Join-Path $repo.folder $repo.name
     } else {
         $targetDir = $ReposRoot
         $displayPath = $repo.name
