@@ -11,7 +11,7 @@ Personal development environment configuration and setup scripts.
 curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-mac.sh | bash
 ```
 
-This installs Homebrew, Git, GitHub CLI, configures git, authenticates with GitHub, and clones all active repos.
+This installs Homebrew, Git, GitHub CLI, 1Password, Dropbox, configures git, authenticates with GitHub, sets up file sync, and clones all active repos.
 
 ### Windows
 
@@ -20,7 +20,7 @@ This installs Homebrew, Git, GitHub CLI, configures git, authenticates with GitH
 irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 -OutFile $env:TEMP\setup.ps1; & $env:TEMP\setup.ps1; rm $env:TEMP\setup.ps1
 ```
 
-This installs Git, GitHub CLI, Windows Terminal, configures git, authenticates with GitHub, and clones all active repos.
+This installs Git, GitHub CLI, Windows Terminal, 1Password, Dropbox, configures git, authenticates with GitHub, sets up file sync, and clones all active repos.
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
 
@@ -50,3 +50,4 @@ This repository contains cross-cutting development environment concerns that app
 - [SSH Strategy](docs/ssh-strategy.md) - SSH key management and configuration approach
 - [Package Management](docs/package-management.md) - Homebrew strategy and rationale
 - [GitHub Config](docs/github-config.md) - Git and GitHub CLI configuration
+- [Dropbox Sync](docs/dropbox-sync.md) - Cross-platform file sync setup

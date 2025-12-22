@@ -75,6 +75,15 @@ if [ "$SKIP_PACKAGES" = false ]; then
         brew install --cask 1password
         echo "    [OK] 1password"
     fi
+
+    # Install Dropbox (cask)
+    if brew list --cask dropbox &> /dev/null; then
+        echo "    [SKIP] dropbox (already installed)"
+    else
+        echo "    Installing dropbox..."
+        brew install --cask dropbox
+        echo "    [OK] dropbox"
+    fi
 fi
 
 # Step 3: Configure 1Password SSH Agent
@@ -277,6 +286,23 @@ else
     echo "    [SKIP] Brewfile not found"
 fi
 
+# Step 11: Dropbox folder sync
+echo ""
+echo "==> Dropbox Folder Sync"
+echo ""
+echo "    ACTION REQUIRED:"
+echo "      1. Open Dropbox and sign in"
+echo "      2. Click Dropbox menu bar icon > Settings (gear)"
+echo "      3. Go to 'Backups' tab"
+echo "      4. Click 'Set up' or 'Manage backup'"
+echo "      5. Enable Desktop, Documents, Downloads"
+echo "      6. Wait for initial sync to complete"
+echo ""
+echo "    See docs/dropbox-sync.md for full details"
+echo ""
+read -p "    Press Enter when done (or to skip for now)"
+echo "    [OK] Dropbox configuration noted"
+
 # Done
 echo ""
 echo "======================================"
@@ -285,7 +311,8 @@ echo "======================================"
 echo ""
 echo "Next steps:"
 echo "  1. Enable 1Password SSH Agent (Settings > Developer > SSH Agent)"
-echo "  2. Test SSH: ssh -T git@github.com"
-echo "  3. Optional: brew bundle --file=~/repos/dev/dotfiles/Brewfile"
+echo "  2. Configure Dropbox folder backup (if not done above)"
+echo "  3. Test SSH: ssh -T git@github.com"
+echo "  4. Optional: brew bundle --file=~/repos/dev/dotfiles/Brewfile"
 echo ""
 echo "Your repos are at: ~/repos/"

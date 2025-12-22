@@ -48,6 +48,7 @@ if (-not $SkipPackages) {
 
     $packages = @(
         "AgileBits.1Password",
+        "Dropbox.Dropbox",
         "Git.Git",
         "GitHub.cli",
         "Microsoft.WindowsTerminal"
@@ -316,6 +317,25 @@ if (-not $SkipRepos) {
     & "$dotfilesPath\scripts\clone-repos.ps1"
 }
 
+# Step 10: Dropbox folder sync
+Write-Step "Dropbox Folder Sync"
+Write-Host ""
+Write-Host "    ACTION REQUIRED:" -ForegroundColor Yellow
+Write-Host "      1. Open Dropbox and sign in (wait for sync to complete)"
+Write-Host "      2. Redirect shell folders to Dropbox:"
+Write-Host ""
+Write-Host "      For each folder (Documents, Desktop, Downloads):" -ForegroundColor Cyan
+Write-Host "        a. Right-click folder in File Explorer sidebar"
+Write-Host "        b. Click 'Properties' > 'Location' tab"
+Write-Host "        c. Click 'Move...' and select the Dropbox folder:"
+Write-Host "           Cloud Option DJ team Dropbox\Thomas Barron\Mac\<folder>"
+Write-Host "        d. Click 'Select Folder' > 'OK' > 'Yes' to move files"
+Write-Host ""
+Write-Host "    See docs/dropbox-sync.md for full details"
+Write-Host ""
+Read-Host "    Press Enter when done (or to skip for now)"
+Write-Success "Dropbox configuration noted"
+
 # Done
 Write-Host ""
 Write-Host "======================================" -ForegroundColor Green
@@ -324,6 +344,7 @@ Write-Host "======================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Restart your terminal"
-Write-Host "  2. Test SSH: ssh -T git@github.com"
+Write-Host "  2. Configure Dropbox folder redirection (if not done above)"
+Write-Host "  3. Test SSH: ssh -T git@github.com"
 Write-Host ""
 Write-Host "Your repos are at: $HOME\repos\" -ForegroundColor Cyan
