@@ -280,13 +280,6 @@ if ($localKey) {
 # =============================================================================
 Write-Step 6 $TotalSteps "Clone Repositories"
 
-# TODO: TEMPORARY - remove after troubleshooting
-Write-Host "    Cleaning up partial clones (temporary)..." -ForegroundColor Yellow
-Remove-Item -Recurse -Force "$ReposRoot\dev\config" -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force "$ReposRoot\dev\dotfiles" -ErrorAction SilentlyContinue
-Remove-Item -Force "$env:USERPROFILE\.ssh\config" -ErrorAction SilentlyContinue
-# END TEMPORARY
-
 # Set up SSH for 1Password agent (needed before clone)
 $sshDir = "$env:USERPROFILE\.ssh"
 $sshConfig = "$sshDir\config"
@@ -515,7 +508,7 @@ if (-not (Test-Path $sshConfig)) {
         $homelabDomain = $hosts.homelab_domain
         $homelabUser = $hosts.homelab_user
 
-        @"
+        $sshConfigContent = @"
 # Git services
 Host github.com
   HostName github.com
@@ -528,11 +521,11 @@ Host *.$homelabDomain
 # Default - 1Password SSH agent
 Host *
   IdentityAgent "\\.\pipe\openssh-ssh-agent"
-"@ | Out-File -FilePath $sshConfig -Encoding utf8
-
+"@
+        [System.IO.File]::WriteAllText($sshConfig, $sshConfigContent)
         Write-Success "SSH config created (with homelab)"
     } else {
-        @"
+        $sshConfigContent = @"
 # Git services
 Host github.com
   HostName github.com
@@ -541,8 +534,8 @@ Host github.com
 # Default - 1Password SSH agent
 Host *
   IdentityAgent "\\.\pipe\openssh-ssh-agent"
-"@ | Out-File -FilePath $sshConfig -Encoding utf8
-
+"@
+        [System.IO.File]::WriteAllText($sshConfig, $sshConfigContent)
         Write-Success "SSH config created"
     }
 } else {
