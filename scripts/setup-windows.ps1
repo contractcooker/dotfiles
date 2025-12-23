@@ -30,6 +30,21 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$LogFile = "$env:TEMP\dotfiles-setup.log"
+
+# Start logging
+Start-Transcript -Path $LogFile -Append | Out-Null
+Write-Host "Logging to: $LogFile" -ForegroundColor DarkGray
+
+trap {
+    Write-Host ""
+    Write-Host "ERROR: $_" -ForegroundColor Red
+    Write-Host "Line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "See full log: $LogFile" -ForegroundColor Yellow
+    Stop-Transcript | Out-Null
+    break
+}
 
 $ReposRoot = "$env:USERPROFILE\repos"
 $ConfigPath = "$ReposRoot\dev\config"
@@ -568,3 +583,5 @@ if (Get-Command gum -ErrorAction SilentlyContinue) {
         }
     }
 }
+
+Stop-Transcript | Out-Null
