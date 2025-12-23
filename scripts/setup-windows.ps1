@@ -571,6 +571,9 @@ if ($precommit) {
     Write-Success "pre-commit installed"
 }
 
+# Ensure uv tools are on PATH
+uv tool update-shell 2>$null
+
 # =============================================================================
 # 11. CLONE ALL REPOS
 # =============================================================================
