@@ -80,7 +80,9 @@ if (Get-Command scoop -ErrorAction SilentlyContinue) {
 } else {
     Write-Host "    Installing Scoop..."
     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-    iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+    irm get.scoop.sh -outfile "$env:TEMP\scoop-install.ps1"
+    & "$env:TEMP\scoop-install.ps1" -RunAsAdmin
+    Remove-Item "$env:TEMP\scoop-install.ps1" -ErrorAction SilentlyContinue
     Refresh-Path
     Write-Success "Scoop installed"
 }
