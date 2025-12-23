@@ -16,6 +16,7 @@ brew "git"                        # [core] Version control
 brew "gh"                         # [core] GitHub CLI
 brew "jq"                         # [core] JSON processor
 brew "gum"                        # [core] Terminal UI for scripts
+brew "mas"                        # [core] Mac App Store CLI
 
 brew "gitleaks"                   # [security] Scan repos for secrets
 brew "bash"                       # [shell] Updated bash (macOS has old 3.x)
