@@ -223,7 +223,6 @@ Write-Step 5 $TotalSteps "GitHub Authentication"
 
 # Check auth status using gh auth token (more reliable than status)
 $ghToken = gh auth token -h github.com 2>$null
-Write-Host "    DEBUG: Token exists = $([bool]$ghToken), APPDATA = $env:APPDATA" -ForegroundColor DarkGray
 if ($ghToken) {
     $ghUser = gh api user --jq '.login' 2>$null
     Write-Success "Authenticated as $ghUser"
@@ -239,30 +238,29 @@ if ($ghToken) {
     }
 }
 
-# Check if we have admin:public_key scope (needed for SSH key management)
+# Try to check/add SSH key (optional - cloning works without this if key already on GitHub)
 $ghKeys = gh ssh-key list 2>&1
 if ($ghKeys -match "404|insufficient") {
-    Write-Host "    Adding SSH key management scope..."
-    gh auth refresh -h github.com -s admin:public_key
-    $ghKeys = gh ssh-key list 2>$null
-}
-
-$localKey = (ssh-add -L | Select-Object -First 1) 2>$null
-if ($localKey) {
-    $keyPart = ($localKey -split ' ')[1]
-    if ($keyPart -and $ghKeys -match $keyPart.Substring(0, 20)) {
-        Write-Success "SSH key already on GitHub"
-    } else {
-        Write-Host "    Adding SSH key to GitHub..."
-        $localKey | gh ssh-key add -t "1Password-$env:COMPUTERNAME"
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "SSH key added to GitHub"
-        } else {
-            Write-Host "    [WARN] Could not add SSH key automatically" -ForegroundColor Yellow
-        }
-    }
+    Write-Host "    [INFO] SSH key management scope not available - skipping auto-add" -ForegroundColor DarkGray
+    Write-Host "    (Your SSH key is likely already on GitHub from a previous setup)" -ForegroundColor DarkGray
 } else {
-    Write-Host "    [WARN] No SSH key found in agent" -ForegroundColor Yellow
+    $localKey = (ssh-add -L | Select-Object -First 1) 2>$null
+    if ($localKey) {
+        $keyPart = ($localKey -split ' ')[1]
+        if ($keyPart -and $ghKeys -match $keyPart.Substring(0, 20)) {
+            Write-Success "SSH key already on GitHub"
+        } else {
+            Write-Host "    Adding SSH key to GitHub..."
+            $localKey | gh ssh-key add -t "1Password-$env:COMPUTERNAME"
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "SSH key added to GitHub"
+            } else {
+                Write-Host "    [WARN] Could not add SSH key automatically" -ForegroundColor Yellow
+            }
+        }
+    } else {
+        Write-Host "    [WARN] No SSH key found in agent" -ForegroundColor Yellow
+    }
 }
 
 # =============================================================================
