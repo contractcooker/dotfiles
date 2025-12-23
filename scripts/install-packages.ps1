@@ -134,6 +134,7 @@ if (Get-Command gum -ErrorAction SilentlyContinue) {
 } else {
     Write-Host "    Installing gum..."
     scoop install gum
+    Refresh-Path
     Write-Success "gum installed"
 }
 
