@@ -1,0 +1,70 @@
+# =============================================================================
+# .gitconfig - Git Configuration
+# =============================================================================
+# This file is symlinked from ~/repos/dev/dotfiles/home/.gitconfig
+#
+# User identity is stored in ~/.gitconfig.local (not version controlled)
+# and included below.
+
+[include]
+    path = ~/.gitconfig.local
+
+[init]
+    defaultBranch = main
+
+[core]
+    autocrlf = input
+    editor = code --wait
+    pager = less -FX
+
+[pull]
+    rebase = false
+
+[push]
+    default = current
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[diff]
+    colorMoved = default
+
+[merge]
+    conflictstyle = diff3
+
+[alias]
+    # Status and info
+    s = status -sb
+    l = log --oneline -20
+    lg = log --oneline --graph --all -20
+    last = log -1 HEAD --stat
+
+    # Branches
+    br = branch
+    co = checkout
+    sw = switch
+    new = switch -c
+
+    # Staging and commits
+    a = add
+    aa = add --all
+    cm = commit -m
+    amend = commit --amend --no-edit
+
+    # Diff
+    d = diff
+    ds = diff --staged
+
+    # Undo
+    unstage = reset HEAD --
+    undo = reset --soft HEAD~1
+
+    # Clean up
+    gone = "!git fetch -p && git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -r git branch -D"
+
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true

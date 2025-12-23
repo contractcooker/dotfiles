@@ -1,0 +1,305 @@
+#!/bin/bash
+# Configure macOS system preferences
+#
+# Two sections:
+#   1. Dev Settings - Recommended for development workflows
+#   2. Personal Settings - Subjective preferences (optional)
+#
+# Usage:
+#   ./configure-macos.sh              # Interactive mode
+#   ./configure-macos.sh --all        # Apply all settings
+#   ./configure-macos.sh --dev-only   # Only dev settings
+
+set -e
+
+# Parse arguments
+APPLY_ALL=false
+DEV_ONLY=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --all) APPLY_ALL=true; shift ;;
+        --dev-only) DEV_ONLY=true; shift ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
+echo ""
+echo "======================================"
+echo "  macOS System Preferences"
+echo "======================================"
+
+# =============================================================================
+# DEV SETTINGS
+# =============================================================================
+
+apply_dev_settings() {
+    echo ""
+    echo "==> Applying Dev Settings"
+
+    # -------------------------------------------------------------------------
+    # Finder
+    # -------------------------------------------------------------------------
+    echo "    Finder:"
+
+    # Show all file extensions
+    defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+    echo "      ✓ Show all file extensions"
+
+    # Show path bar
+    defaults write com.apple.finder ShowPathbar -bool true
+    echo "      ✓ Show path bar"
+
+    # Show status bar
+    defaults write com.apple.finder ShowStatusBar -bool true
+    echo "      ✓ Show status bar"
+
+    # Default to list view
+    defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+    echo "      ✓ Default to list view"
+
+    # Disable extension change warning
+    defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+    echo "      ✓ Disable extension change warning"
+
+    # Show hidden files
+    defaults write com.apple.finder AppleShowAllFiles -bool true
+    echo "      ✓ Show hidden files"
+
+    # -------------------------------------------------------------------------
+    # Keyboard
+    # -------------------------------------------------------------------------
+    echo "    Keyboard:"
+
+    # Faster key repeat
+    defaults write NSGlobalDomain KeyRepeat -int 2
+    echo "      ✓ Fast key repeat"
+
+    # Shorter delay until repeat
+    defaults write NSGlobalDomain InitialKeyRepeat -int 15
+    echo "      ✓ Short repeat delay"
+
+    # Disable press-and-hold for keys (enable key repeat)
+    defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+    echo "      ✓ Disable press-and-hold (enable repeat)"
+
+    # -------------------------------------------------------------------------
+    # Text Input
+    # -------------------------------------------------------------------------
+    echo "    Text Input:"
+
+    # Disable auto-correct
+    defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+    echo "      ✓ Disable auto-correct"
+
+    # Disable auto-capitalization
+    defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+    echo "      ✓ Disable auto-capitalization"
+
+    # Disable smart quotes
+    defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+    echo "      ✓ Disable smart quotes"
+
+    # Disable smart dashes
+    defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+    echo "      ✓ Disable smart dashes"
+
+    # Disable auto period substitution
+    defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
+    echo "      ✓ Disable period substitution"
+
+    # -------------------------------------------------------------------------
+    # Screenshots
+    # -------------------------------------------------------------------------
+    echo "    Screenshots:"
+
+    # Save screenshots to Downloads
+    defaults write com.apple.screencapture location -string "$HOME/Downloads"
+    echo "      ✓ Save to ~/Downloads"
+
+    # Save as PNG
+    defaults write com.apple.screencapture type -string "png"
+    echo "      ✓ Format: PNG"
+
+    # Disable shadow in screenshots
+    defaults write com.apple.screencapture disable-shadow -bool true
+    echo "      ✓ Disable window shadows"
+
+    # -------------------------------------------------------------------------
+    # Misc
+    # -------------------------------------------------------------------------
+    echo "    Misc:"
+
+    # Expand save panel by default
+    defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+    defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
+    echo "      ✓ Expand save dialogs"
+
+    # Expand print panel by default
+    defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
+    defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
+    echo "      ✓ Expand print dialogs"
+
+    # Disable "Are you sure you want to open this app?"
+    defaults write com.apple.LaunchServices LSQuarantine -bool false
+    echo "      ✓ Disable app open confirmation"
+
+    # -------------------------------------------------------------------------
+    # Time Machine Exclusions
+    # -------------------------------------------------------------------------
+    echo "    Time Machine:"
+
+    # Exclude repos (version controlled, no backup needed)
+    if [ -d "$HOME/repos" ]; then
+        tmutil addexclusion "$HOME/repos" 2>/dev/null || true
+        echo "      ✓ Exclude ~/repos"
+    fi
+
+    # Exclude Homebrew cache
+    if [ -d "$HOME/Library/Caches/Homebrew" ]; then
+        tmutil addexclusion "$HOME/Library/Caches/Homebrew" 2>/dev/null || true
+        echo "      ✓ Exclude Homebrew cache"
+    fi
+
+    # Exclude npm cache
+    if [ -d "$HOME/.npm" ]; then
+        tmutil addexclusion "$HOME/.npm" 2>/dev/null || true
+        echo "      ✓ Exclude npm cache"
+    fi
+}
+
+# =============================================================================
+# PERSONAL SETTINGS
+# =============================================================================
+
+apply_personal_settings() {
+    echo ""
+    echo "==> Applying Personal Settings"
+
+    # -------------------------------------------------------------------------
+    # Appearance
+    # -------------------------------------------------------------------------
+    echo "    Appearance:"
+
+    # Dark mode
+    defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
+    echo "      ✓ Dark mode enabled"
+
+    # 24-hour time
+    defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
+    echo "      ✓ 24-hour time"
+
+    # -------------------------------------------------------------------------
+    # Dock
+    # -------------------------------------------------------------------------
+    echo "    Dock:"
+
+    # Auto-hide dock
+    defaults write com.apple.dock autohide -bool true
+    echo "      ✓ Auto-hide dock"
+
+    # Set dock size
+    defaults write com.apple.dock tilesize -int 48
+    echo "      ✓ Dock size: 48"
+
+    # Don't show recent apps
+    defaults write com.apple.dock show-recents -bool false
+    echo "      ✓ Hide recent apps"
+
+    # Minimize windows to application icon
+    defaults write com.apple.dock minimize-to-application -bool true
+    echo "      ✓ Minimize to app icon"
+
+    # -------------------------------------------------------------------------
+    # Trackpad
+    # -------------------------------------------------------------------------
+    echo "    Trackpad:"
+
+    # Tap to click
+    defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+    defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+    defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+    echo "      ✓ Tap to click"
+
+    # Fast tracking speed
+    defaults write NSGlobalDomain com.apple.trackpad.scaling -float 2.5
+    echo "      ✓ Fast tracking speed"
+
+    # -------------------------------------------------------------------------
+    # Desktop
+    # -------------------------------------------------------------------------
+    echo "    Desktop:"
+
+    # Don't show hard drives on desktop
+    defaults write com.apple.finder ShowHardDrivesOnDesktop -bool false
+    echo "      ✓ Hide hard drives on desktop"
+
+    # Show external drives on desktop
+    defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
+    echo "      ✓ Show external drives on desktop"
+
+    # -------------------------------------------------------------------------
+    # Security
+    # -------------------------------------------------------------------------
+    echo "    Security:"
+
+    # Require password immediately after sleep
+    defaults write com.apple.screensaver askForPassword -int 1
+    defaults write com.apple.screensaver askForPasswordDelay -int 0
+    echo "      ✓ Require password immediately"
+}
+
+# =============================================================================
+# MAIN
+# =============================================================================
+
+if [ "$APPLY_ALL" = true ]; then
+    apply_dev_settings
+    apply_personal_settings
+elif [ "$DEV_ONLY" = true ]; then
+    apply_dev_settings
+else
+    # Interactive mode
+    echo ""
+
+    if command -v gum &> /dev/null; then
+        CHOICES=$(gum choose --no-limit --selected="Dev Settings" \
+            "Dev Settings" \
+            "Personal Settings")
+
+        if echo "$CHOICES" | grep -q "Dev Settings"; then
+            apply_dev_settings
+        fi
+
+        if echo "$CHOICES" | grep -q "Personal Settings"; then
+            apply_personal_settings
+        fi
+    else
+        echo "Select settings to apply:"
+        echo ""
+        read -p "    Apply Dev Settings? [Y/n] " DEV_CHOICE
+        if [[ ! "$DEV_CHOICE" =~ ^[Nn]$ ]]; then
+            apply_dev_settings
+        fi
+
+        read -p "    Apply Personal Settings? [y/N] " PERSONAL_CHOICE
+        if [[ "$PERSONAL_CHOICE" =~ ^[Yy]$ ]]; then
+            apply_personal_settings
+        fi
+    fi
+fi
+
+# Restart affected applications
+echo ""
+echo "==> Restarting affected applications"
+killall Finder 2>/dev/null || true
+killall Dock 2>/dev/null || true
+killall SystemUIServer 2>/dev/null || true
+echo "    ✓ Finder, Dock, and SystemUIServer restarted"
+
+echo ""
+echo "======================================"
+echo "  macOS Configuration Complete"
+echo "======================================"
+echo ""
+echo "Some changes may require logout/restart to take effect."
+echo ""

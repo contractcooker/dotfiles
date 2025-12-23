@@ -1,243 +1,259 @@
-#!/bin/bash
+#!/bin/zsh
 # macOS Development Environment Setup
 #
-# Usage:
-#   curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-mac.sh | bash
+# Optimized order:
+#   1. Homebrew           - foundation
+#   2. 1Password          - enables all auth
+#   3. 1Password SSH      - configure agent
+#   4. Core CLI tools     - git, gh, jq, gum, fnm
+#   5. GitHub CLI auth    - via SSH
+#   6. Clone repos        - config + dotfiles
+#   7. Link dotfiles      - shell/git config
+#   8. Node + Claude      - troubleshooting available!
+#   9. Git + SSH config   - from config repo
+#   10. Python/uv         - dev tools
+#   11. Clone all repos   - everything ready
+#   12. Optional packages - interactive
+#   13. Dropbox           - file sync
+#   14. macOS prefs       - cosmetic
 #
-# Or if you've already cloned dotfiles:
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-mac.sh | zsh
 #   ./setup-mac.sh
+#   ./setup-mac.sh --all    # Non-interactive
 
 set -e
-
-SKIP_PACKAGES=false
-SKIP_GIT_CONFIG=false
-SKIP_REPOS=false
-
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --skip-packages) SKIP_PACKAGES=true; shift ;;
-        --skip-git-config) SKIP_GIT_CONFIG=true; shift ;;
-        --skip-repos) SKIP_REPOS=true; shift ;;
-        *) echo "Unknown option: $1"; exit 1 ;;
-    esac
-done
 
 REPOS_ROOT="$HOME/repos"
 CONFIG_PATH="$REPOS_ROOT/dev/config"
 DOTFILES_PATH="$REPOS_ROOT/dev/dotfiles"
+SCRIPT_DIR="$DOTFILES_PATH/scripts"
+
+# Parse arguments
+INSTALL_ALL=false
+[[ "$1" == "--all" ]] && INSTALL_ALL=true
 
 echo ""
 echo "======================================"
 echo "  macOS Development Setup"
 echo "======================================"
 
-# Step 1: Install Homebrew
+# =============================================================================
+# 1. HOMEBREW
+# =============================================================================
 echo ""
-echo "==> Checking Homebrew"
+echo "==> [1/14] Homebrew"
 
 if command -v brew &> /dev/null; then
-    echo "    [SKIP] Homebrew (already installed)"
+    echo "    ✓ Already installed"
 else
     echo "    Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    # Add brew to PATH for this session
-    if [[ -f /opt/homebrew/bin/brew ]]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -f /usr/local/bin/brew ]]; then
-        eval "$(/usr/local/bin/brew shellenv)"
-    fi
-    echo "    [OK] Homebrew installed"
 fi
 
-# Step 2: Install core packages
-if [ "$SKIP_PACKAGES" = false ]; then
-    echo ""
-    echo "==> Installing core packages"
-
-    packages=(git gh jq)
-    for pkg in "${packages[@]}"; do
-        if brew list "$pkg" &> /dev/null; then
-            echo "    [SKIP] $pkg (already installed)"
-        else
-            echo "    Installing $pkg..."
-            brew install "$pkg"
-            echo "    [OK] $pkg"
-        fi
-    done
-
-    # Install 1Password (cask)
-    if brew list --cask 1password &> /dev/null; then
-        echo "    [SKIP] 1password (already installed)"
-    else
-        echo "    Installing 1password..."
-        brew install --cask 1password
-        echo "    [OK] 1password"
-    fi
-
-    # Install Dropbox (cask)
-    if brew list --cask dropbox &> /dev/null; then
-        echo "    [SKIP] dropbox (already installed)"
-    else
-        echo "    Installing dropbox..."
-        brew install --cask dropbox
-        echo "    [OK] dropbox"
-    fi
+# Ensure brew is in PATH for this session
+if [[ -f /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# Step 3: Configure 1Password SSH Agent
+# =============================================================================
+# 2. 1PASSWORD
+# =============================================================================
 echo ""
-echo "==> 1Password SSH Agent Setup"
-echo ""
-echo "    ACTION REQUIRED:"
-echo "      1. Open 1Password"
-echo "      2. Go to Settings > Developer"
-echo "      3. Enable 'Use the SSH Agent'"
-echo ""
-read -p "    Press Enter when done"
-echo "    [OK] 1Password SSH Agent configured"
+echo "==> [2/14] 1Password"
 
-# Step 4: Install Node.js (via fnm) and Claude Code
-echo ""
-echo "==> Setting up Node.js and Claude Code"
-
-if brew list fnm &> /dev/null; then
-    echo "    [SKIP] fnm (already installed)"
+if brew list --cask 1password &> /dev/null || [[ -d "/Applications/1Password.app" ]]; then
+    echo "    ✓ Already installed"
 else
-    echo "    Installing fnm (Node version manager)..."
-    brew install fnm
-    echo "    [OK] fnm installed"
+    echo "    Installing 1Password..."
+    brew install --cask 1password || echo "    ⚠ Install manually if needed"
 fi
+
+# Also install CLI
+if brew list 1password-cli &> /dev/null; then
+    echo "    ✓ 1Password CLI installed"
+else
+    echo "    Installing 1Password CLI..."
+    brew install 1password-cli || true
+fi
+
+# =============================================================================
+# 3. 1PASSWORD SSH AGENT
+# =============================================================================
+echo ""
+echo "==> [3/14] 1Password SSH Agent"
+echo ""
+echo "    ┌─────────────────────────────────────────────┐"
+echo "    │  IMPORTANT: Enable SSH Agent now            │"
+echo "    │                                             │"
+echo "    │  1. Open 1Password                          │"
+echo "    │  2. Sign in to your account                 │"
+echo "    │  3. Settings → Developer                    │"
+echo "    │  4. Enable 'Use the SSH Agent'              │"
+echo "    │                                             │"
+echo "    │  This is required for GitHub authentication │"
+echo "    └─────────────────────────────────────────────┘"
+echo ""
+
+if command -v gum &> /dev/null; then
+    gum confirm "    SSH Agent enabled?" || echo "    ⚠ Remember to enable it!"
+else
+    read "?    Press Enter when done (or to continue anyway) "
+fi
+
+# =============================================================================
+# 4. CORE CLI TOOLS
+# =============================================================================
+echo ""
+echo "==> [4/14] Core CLI Tools"
+
+CORE_TOOLS=(git gh jq gum fnm)
+for tool in "${CORE_TOOLS[@]}"; do
+    if brew list "$tool" &> /dev/null; then
+        echo "    ✓ $tool"
+    else
+        echo "    Installing $tool..."
+        brew install "$tool"
+    fi
+done
+
+# =============================================================================
+# 5. GITHUB CLI AUTH
+# =============================================================================
+echo ""
+echo "==> [5/14] GitHub Authentication"
+
+if gh auth status &> /dev/null; then
+    GH_USER=$(gh api user --jq '.login' 2>/dev/null || echo "unknown")
+    echo "    ✓ Authenticated as $GH_USER"
+else
+    echo "    Authenticating with GitHub..."
+    echo "    (Using SSH protocol with 1Password agent)"
+    gh auth login --web --git-protocol ssh --skip-ssh-key
+fi
+
+# =============================================================================
+# 6. CLONE CONFIG + DOTFILES
+# =============================================================================
+echo ""
+echo "==> [6/14] Clone Repositories"
+
+mkdir -p "$REPOS_ROOT/dev"
+
+if [[ -d "$CONFIG_PATH" ]]; then
+    echo "    ✓ config repo exists"
+else
+    echo "    Cloning config..."
+    cd "$REPOS_ROOT/dev"
+    gh repo clone config
+fi
+
+if [[ -d "$DOTFILES_PATH" ]]; then
+    echo "    ✓ dotfiles repo exists"
+else
+    echo "    Cloning dotfiles..."
+    cd "$REPOS_ROOT/dev"
+    gh repo clone dotfiles
+fi
+
+# =============================================================================
+# 7. LINK DOTFILES
+# =============================================================================
+echo ""
+echo "==> [7/14] Link Dotfiles"
+
+if [[ -f "$SCRIPT_DIR/link-dotfiles.sh" ]]; then
+    "$SCRIPT_DIR/link-dotfiles.sh"
+else
+    echo "    ⚠ link-dotfiles.sh not found"
+fi
+
+# =============================================================================
+# 8. NODE + CLAUDE CODE
+# =============================================================================
+echo ""
+echo "==> [8/14] Node.js + Claude Code"
 
 # Initialize fnm for this session
-eval "$(fnm env --use-on-cd --shell bash)"
+eval "$(fnm env --use-on-cd --shell zsh)"
 
-# Add fnm to shell profile if not already there
-SHELL_PROFILE="$HOME/.zshrc"
-if [ -f "$SHELL_PROFILE" ]; then
-    if ! grep -q "fnm env" "$SHELL_PROFILE"; then
-        echo "" >> "$SHELL_PROFILE"
-        echo "# fnm (Node version manager)" >> "$SHELL_PROFILE"
-        echo 'eval "$(fnm env --use-on-cd --shell zsh)"' >> "$SHELL_PROFILE"
-        echo "    [OK] fnm added to .zshrc"
-    else
-        echo "    [SKIP] fnm already in .zshrc"
-    fi
-else
-    echo '# fnm (Node version manager)' > "$SHELL_PROFILE"
-    echo 'eval "$(fnm env --use-on-cd --shell zsh)"' >> "$SHELL_PROFILE"
-    echo "    [OK] .zshrc created with fnm"
-fi
-
-# Install Node.js LTS
+# Install Node LTS
 if fnm list 2>/dev/null | grep -q "lts"; then
-    fnm use lts-latest 2>/dev/null
-    echo "    [SKIP] Node.js LTS (already installed)"
+    fnm use lts-latest 2>/dev/null || true
+    echo "    ✓ Node.js LTS"
 else
     echo "    Installing Node.js LTS..."
     fnm install --lts
     fnm use lts-latest
     fnm default lts-latest
-    echo "    [OK] Node.js LTS installed"
 fi
 
 # Install Claude Code
-if npm list -g @anthropic-ai/claude-code &> /dev/null; then
-    echo "    [SKIP] Claude Code (already installed)"
+if command -v claude &> /dev/null; then
+    echo "    ✓ Claude Code"
 else
     echo "    Installing Claude Code..."
     npm install -g @anthropic-ai/claude-code
-    echo "    [OK] Claude Code installed"
 fi
-# Configure Claude Code global settings
+
+# Configure Claude settings (if source exists and target doesn't or matches)
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_SETTINGS="$CLAUDE_DIR/CLAUDE.md"
+CLAUDE_SOURCE="$DOTFILES_PATH/claude/global.md"
 mkdir -p "$CLAUDE_DIR"
-cp "$DOTFILES_PATH/claude/global.md" "$CLAUDE_SETTINGS"
-echo "    [OK] Claude global settings configured"
-
-# Step 5: Authenticate GitHub CLI
-echo ""
-echo "==> Authenticating GitHub CLI"
-
-if gh auth status &> /dev/null; then
-    echo "    [SKIP] Already authenticated with GitHub"
-else
-    echo "    Opening browser for GitHub authentication..."
-    gh auth login --web --git-protocol ssh --skip-ssh-key
-    echo "    [OK] GitHub authenticated"
-fi
-
-# Step 6: Clone config repo (private - needs auth first)
-echo ""
-echo "==> Setting up config"
-
-mkdir -p "$REPOS_ROOT/dev"
-
-if [ ! -d "$CONFIG_PATH" ]; then
-    echo "    Cloning config..."
-    cd "$REPOS_ROOT/dev"
-    gh repo clone config
-    echo "    [OK] config cloned"
-else
-    echo "    [SKIP] config (already exists)"
-fi
-
-# Step 7: Configure Git from config
-if [ "$SKIP_GIT_CONFIG" = false ]; then
-    echo ""
-    echo "==> Configuring Git"
-
-    if [ -f "$CONFIG_PATH/identity.json" ]; then
-        GIT_NAME=$(jq -r '.name' "$CONFIG_PATH/identity.json")
-        GIT_EMAIL=$(jq -r '.email' "$CONFIG_PATH/identity.json")
-
-        git config --global user.name "$GIT_NAME"
-        git config --global user.email "$GIT_EMAIL"
-        git config --global init.defaultBranch main
-
-        echo "    [OK] Git configured"
-        echo "    user.name: $GIT_NAME"
-        echo "    user.email: $GIT_EMAIL"
-        echo "    init.defaultBranch: main"
+if [[ -f "$CLAUDE_SOURCE" ]]; then
+    if [[ ! -f "$CLAUDE_SETTINGS" ]]; then
+        cp "$CLAUDE_SOURCE" "$CLAUDE_SETTINGS"
+        echo "    ✓ Claude settings configured"
+    elif diff -q "$CLAUDE_SOURCE" "$CLAUDE_SETTINGS" &>/dev/null; then
+        echo "    ✓ Claude settings up to date"
     else
-        echo "    [ERROR] identity.json not found in config repo"
-        exit 1
+        echo "    ⚠ Claude settings differ (keeping local)"
     fi
 fi
 
-# Step 8: Clone dotfiles and other repos
-if [ "$SKIP_REPOS" = false ]; then
-    echo ""
-    echo "==> Setting up repos"
+echo ""
+echo "    ┌─────────────────────────────────────────────┐"
+echo "    │  Claude Code is now available!              │"
+echo "    │  Run 'claude' if you need help from here.   │"
+echo "    └─────────────────────────────────────────────┘"
 
-    # Clone dotfiles if not present
-    if [ ! -d "$DOTFILES_PATH" ]; then
-        echo "    Cloning dotfiles..."
-        cd "$REPOS_ROOT/dev"
-        gh repo clone dotfiles
-        echo "    [OK] dotfiles cloned"
-    else
-        echo "    [SKIP] dotfiles (already exists)"
-    fi
+# =============================================================================
+# 9. GIT + SSH CONFIG
+# =============================================================================
+echo ""
+echo "==> [9/14] Git + SSH Configuration"
 
-    # Run clone-repos script (reads from config/repos.json)
-    echo "    Running clone-repos.sh..."
-    "$DOTFILES_PATH/scripts/clone-repos.sh"
+# Git identity from config repo
+if [[ -f "$CONFIG_PATH/identity.json" ]]; then
+    GIT_NAME=$(jq -r '.name' "$CONFIG_PATH/identity.json")
+    GIT_EMAIL=$(jq -r '.email' "$CONFIG_PATH/identity.json")
+
+    cat > "$HOME/.gitconfig.local" << EOF
+# Local git identity (not version controlled)
+# Generated from config/identity.json
+
+[user]
+    name = $GIT_NAME
+    email = $GIT_EMAIL
+EOF
+    echo "    ✓ Git identity: $GIT_NAME <$GIT_EMAIL>"
+else
+    echo "    ⚠ identity.json not found"
 fi
 
-# Step 9: SSH config for 1Password
-echo ""
-echo "==> SSH Configuration"
-
+# SSH config
 SSH_DIR="$HOME/.ssh"
 SSH_CONFIG="$SSH_DIR/config"
-
 mkdir -p "$SSH_DIR"
+chmod 700 "$SSH_DIR"
 
-if [ ! -f "$SSH_CONFIG" ]; then
-    if [ -f "$CONFIG_PATH/hosts.json" ]; then
+if [[ -f "$SSH_CONFIG" ]]; then
+    echo "    ✓ SSH config exists"
+else
+    if [[ -f "$CONFIG_PATH/hosts.json" ]]; then
         HOMELAB_DOMAIN=$(jq -r '.homelab_domain' "$CONFIG_PATH/hosts.json")
         HOMELAB_USER=$(jq -r '.homelab_user' "$CONFIG_PATH/hosts.json")
 
@@ -251,68 +267,152 @@ Host github.com
 Host *.$HOMELAB_DOMAIN
   User $HOMELAB_USER
 
-# Default settings - 1Password agent for all connections
+# Default - 1Password SSH agent
 Host *
   IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 EOF
-        echo "    [OK] SSH config created"
-        echo "    Enable 1Password SSH Agent in 1Password settings to use"
+        echo "    ✓ SSH config created (with homelab)"
     else
-        echo "    [WARN] hosts.json not found, creating minimal SSH config"
         cat > "$SSH_CONFIG" << 'EOF'
 # Git services
 Host github.com
   HostName github.com
   User git
 
-# Default settings - 1Password agent for all connections
+# Default - 1Password SSH agent
 Host *
   IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 EOF
-        echo "    [OK] SSH config created (minimal)"
+        echo "    ✓ SSH config created"
     fi
-else
-    echo "    [SKIP] SSH config (already exists)"
+    chmod 600 "$SSH_CONFIG"
 fi
 
-# Step 10: Install full Brewfile (optional)
+# =============================================================================
+# 10. PYTHON / UV
+# =============================================================================
 echo ""
-echo "==> Brewfile"
+echo "==> [10/14] Python (uv)"
 
-BREWFILE="$DOTFILES_PATH/Brewfile"
-if [ -f "$BREWFILE" ]; then
-    echo "    To install all packages: brew bundle --file=$BREWFILE"
+if brew list uv &> /dev/null; then
+    echo "    ✓ uv installed"
 else
-    echo "    [SKIP] Brewfile not found"
+    echo "    Installing uv..."
+    brew install uv
 fi
 
-# Step 11: Dropbox folder sync
+if uv python list --only-installed 2>/dev/null | grep -q "cpython"; then
+    echo "    ✓ Python installed"
+else
+    echo "    Installing Python..."
+    uv python install
+fi
+
+if uv tool list 2>/dev/null | grep -q "pre-commit"; then
+    echo "    ✓ pre-commit installed"
+else
+    echo "    Installing pre-commit..."
+    uv tool install pre-commit
+fi
+
+# =============================================================================
+# 11. CLONE ALL REPOS
+# =============================================================================
 echo ""
-echo "==> Dropbox Folder Sync"
+echo "==> [11/14] Clone All Repositories"
+
+if [[ -f "$SCRIPT_DIR/clone-repos.sh" ]]; then
+    "$SCRIPT_DIR/clone-repos.sh"
+else
+    echo "    ⚠ clone-repos.sh not found"
+fi
+
+# =============================================================================
+# 12. OPTIONAL PACKAGES
+# =============================================================================
 echo ""
-echo "    ACTION REQUIRED:"
+echo "==> [12/14] Optional Packages"
+
+if [[ "$INSTALL_ALL" == true ]]; then
+    "$SCRIPT_DIR/install-packages.sh" --all
+else
+    if command -v gum &> /dev/null; then
+        if gum confirm "Install optional packages now?"; then
+            "$SCRIPT_DIR/install-packages.sh"
+        else
+            echo "    Skipped (run install-packages.sh later)"
+        fi
+    else
+        read "REPLY?    Install optional packages? [y/N] "
+        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+            "$SCRIPT_DIR/install-packages.sh"
+        else
+            echo "    Skipped"
+        fi
+    fi
+fi
+
+# =============================================================================
+# 13. DROPBOX
+# =============================================================================
+echo ""
+echo "==> [13/14] Dropbox"
+
+if brew list --cask dropbox &> /dev/null || [[ -d "/Applications/Dropbox.app" ]]; then
+    echo "    ✓ Dropbox installed"
+else
+    echo "    Installing Dropbox..."
+    brew install --cask dropbox || echo "    ⚠ Install manually if needed"
+fi
+
+echo ""
+echo "    Configure Dropbox folder sync:"
 echo "      1. Open Dropbox and sign in"
-echo "      2. Click Dropbox menu bar icon > Settings (gear)"
-echo "      3. Go to 'Backups' tab"
-echo "      4. Click 'Set up' or 'Manage backup'"
-echo "      5. Enable Desktop, Documents, Downloads"
-echo "      6. Wait for initial sync to complete"
+echo "      2. Menu bar → Settings → Backups"
+echo "      3. Enable Desktop, Documents, Downloads"
 echo ""
-echo "    See docs/dropbox-sync.md for full details"
-echo ""
-read -p "    Press Enter when done (or to skip for now)"
-echo "    [OK] Dropbox configuration noted"
 
-# Done
+if command -v gum &> /dev/null; then
+    gum confirm "    Open Dropbox now?" && open -a Dropbox || true
+fi
+
+# =============================================================================
+# 14. MACOS PREFERENCES
+# =============================================================================
+echo ""
+echo "==> [14/14] macOS Preferences"
+
+if [[ "$INSTALL_ALL" == true ]]; then
+    "$SCRIPT_DIR/configure-macos.sh" --all
+else
+    if command -v gum &> /dev/null; then
+        if gum confirm "Configure macOS preferences?"; then
+            "$SCRIPT_DIR/configure-macos.sh"
+        else
+            echo "    Skipped (run configure-macos.sh later)"
+        fi
+    else
+        read "REPLY?    Configure macOS preferences? [y/N] "
+        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+            "$SCRIPT_DIR/configure-macos.sh"
+        else
+            echo "    Skipped"
+        fi
+    fi
+fi
+
+# =============================================================================
+# DONE
+# =============================================================================
 echo ""
 echo "======================================"
 echo "  Setup Complete!"
 echo "======================================"
 echo ""
-echo "Next steps:"
-echo "  1. Enable 1Password SSH Agent (Settings > Developer > SSH Agent)"
-echo "  2. Configure Dropbox folder backup (if not done above)"
-echo "  3. Test SSH: ssh -T git@github.com"
-echo "  4. Optional: brew bundle --file=~/repos/dev/dotfiles/Brewfile"
+echo "  Verify: $SCRIPT_DIR/verify-setup.sh"
+echo "  Repos:  ~/repos/"
 echo ""
-echo "Your repos are at: ~/repos/"
+
+if command -v gum &> /dev/null; then
+    gum confirm "Run verification?" && "$SCRIPT_DIR/verify-setup.sh" || true
+fi

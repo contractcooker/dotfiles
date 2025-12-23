@@ -21,8 +21,14 @@ irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup
 ## Commands
 
 ```bash
-# Install all packages from Brewfile (macOS)
-brew bundle --file=~/repos/dev/dotfiles/Brewfile
+# Full setup (interactive)
+~/repos/dev/dotfiles/scripts/setup-mac.sh
+
+# Individual scripts (can run standalone)
+~/repos/dev/dotfiles/scripts/install-packages.sh   # Homebrew packages
+~/repos/dev/dotfiles/scripts/configure-dev.sh      # Git, SSH, Node, Python
+~/repos/dev/dotfiles/scripts/configure-macos.sh    # macOS preferences
+~/repos/dev/dotfiles/scripts/verify-setup.sh       # Verify environment
 
 # Clone all repos from manifest
 ~/repos/dev/dotfiles/scripts/clone-repos.sh
@@ -33,17 +39,24 @@ brew bundle --file=~/repos/dev/dotfiles/Brewfile
 
 ## Structure
 
-- `Brewfile` - Homebrew package manifest (macOS)
+- `Brewfile` - Homebrew package manifest (core + optional packages)
 - `scripts/`
-  - `setup-mac.sh` - macOS bootstrap (one-liner)
-  - `setup-windows.ps1` - Windows bootstrap (one-liner)
+  - `setup-mac.sh` - Main orchestrator (calls other scripts)
+  - `install-packages.sh` - Interactive Homebrew package installer (uses gum)
+  - `configure-dev.sh` - Dev environment (Git, SSH, Node/fnm, Python/uv, Claude)
+  - `configure-macos.sh` - macOS system preferences (dev + personal sections)
+  - `verify-setup.sh` - Environment health check
+  - `setup-windows.ps1` - Windows bootstrap
   - `clone-repos.sh` / `clone-repos.ps1` - Clone repos from manifest
   - `gh-create` - Create new GitHub repos with standard settings
+- `claude/` - Claude Code settings
+  - `global.md` - Global Claude settings (copied to ~/.claude/CLAUDE.md)
 - `docs/` - Strategy documentation
-  - `windows-setup.md` - Windows development environment guide
+  - `dropbox-sync.md` - Cross-platform file sync
   - `ssh-strategy.md` - SSH key management (1Password)
   - `package-management.md` - Homebrew rationale
   - `github-config.md` - Git and GitHub CLI config
+  - `windows-setup.md` - Windows development environment guide
 
 ## Relationship to config repo
 

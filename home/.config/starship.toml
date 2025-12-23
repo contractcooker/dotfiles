@@ -1,0 +1,123 @@
+# =============================================================================
+# Starship Prompt Configuration
+# =============================================================================
+# Docs: https://starship.rs/config/
+# This file is symlinked from ~/repos/dev/dotfiles/home/.config/starship.toml
+
+# Timeout for commands (ms) - keeps prompt snappy
+command_timeout = 500
+
+# Insert blank line between prompts
+add_newline = true
+
+# -----------------------------------------------------------------------------
+# Prompt Format
+# -----------------------------------------------------------------------------
+format = """
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$golang\
+$docker_context\
+$cmd_duration\
+$line_break\
+$character"""
+
+# -----------------------------------------------------------------------------
+# Directory
+# -----------------------------------------------------------------------------
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+style = "bold cyan"
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[directory.substitutions]
+"~/repos/dev" = "dev"
+"~/repos/personal" = "personal"
+"~/repos/everything" = "everything"
+
+# -----------------------------------------------------------------------------
+# Git
+# -----------------------------------------------------------------------------
+[git_branch]
+format = "on [$symbol$branch]($style) "
+style = "bold purple"
+symbol = ""
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = "bold red"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?"
+stashed = "\\$"
+modified = "!"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+
+# -----------------------------------------------------------------------------
+# Languages (only shown when relevant files detected)
+# -----------------------------------------------------------------------------
+[python]
+format = 'via [${symbol}${pyenv_prefix}(${version} )]($style)'
+symbol = "🐍 "
+style = "yellow"
+
+[nodejs]
+format = "via [$symbol($version )]($style)"
+symbol = "⬢ "
+style = "green"
+
+[rust]
+format = "via [$symbol($version )]($style)"
+symbol = "🦀 "
+style = "red"
+
+[golang]
+format = "via [$symbol($version )]($style)"
+symbol = "🐹 "
+style = "cyan"
+
+[docker_context]
+format = "via [$symbol$context]($style) "
+symbol = "🐳 "
+style = "blue"
+only_with_files = true
+
+# -----------------------------------------------------------------------------
+# Command Duration
+# -----------------------------------------------------------------------------
+[cmd_duration]
+min_time = 2000  # Show if command takes > 2 seconds
+format = "took [$duration]($style) "
+style = "yellow"
+
+# -----------------------------------------------------------------------------
+# Prompt Character
+# -----------------------------------------------------------------------------
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+# -----------------------------------------------------------------------------
+# Disabled Modules (for performance)
+# -----------------------------------------------------------------------------
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[azure]
+disabled = true
+
+[package]
+disabled = true
