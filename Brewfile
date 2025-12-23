@@ -54,6 +54,12 @@ cask "daisydisk"                  # [utility] Disk space analyzer
 cask "coconutbattery"             # [utility] Battery health monitor
 cask "balenaetcher"               # [utility] Disk image flasher
 cask "sd-card-formatter"          # [utility] SD card formatter
+cask "microsoft-remote-desktop"   # [utility] Remote desktop client
+
+cask "pages"                      # [productivity] Word processor
+cask "numbers"                    # [productivity] Spreadsheets
+cask "keynote"                    # [productivity] Presentations
+cask "ticktick"                   # [productivity] Task manager
 
 cask "google-chrome"              # [browser] Chrome
 cask "orion"                      # [browser] WebKit + extensions
@@ -84,13 +90,7 @@ mas "Logic Pro", id: 634148309                # [media] Audio workstation
 mas "Compressor", id: 424390742               # [media] Video encoder
 mas "GarageBand", id: 682658836               # [media] Music creation
 
-mas "Pages", id: 409201541                    # [productivity] Word processor
-mas "Numbers", id: 409203825                  # [productivity] Spreadsheets
-mas "Keynote", id: 409183694                  # [productivity] Presentations
-mas "TickTick", id: 966085870                 # [productivity] Task manager
-
 mas "Kagi Search", id: 1622835804             # [browser] Kagi Safari extension
-mas "Windows App", id: 1295203466             # [utility] Microsoft Remote Desktop
 mas "Dynamic Wallpaper", id: 1453504509       # [utility] Animated wallpapers
 mas "AJA System Test Lite", id: 1092006274    # [utility] Disk speed testing
 mas "CARROT Weather", id: 993487541           # [utility] Weather with personality
