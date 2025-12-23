@@ -247,6 +247,18 @@ if ($wasLoggedIn) {
 # =============================================================================
 Write-Step 6 $TotalSteps "Clone Repositories"
 
+# Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
+$sshDir = "$env:USERPROFILE\.ssh"
+$knownHosts = "$sshDir\known_hosts"
+if (-not (Test-Path $sshDir)) {
+    New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+}
+if (-not (Test-Path $knownHosts) -or -not (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet)) {
+    Write-Host "    Adding GitHub to known_hosts..."
+    ssh-keyscan -t ed25519 github.com 2>$null >> $knownHosts
+    Write-Success "GitHub host key added"
+}
+
 if (-not (Test-Path "$ReposRoot\dev")) {
     New-Item -ItemType Directory -Path "$ReposRoot\dev" -Force | Out-Null
 }
