@@ -351,14 +351,16 @@ $devModeEnabled = (Get-ItemProperty -Path $devModePath -Name AllowDevelopmentWit
 if ($devModeEnabled -eq 1) {
     Write-Success "Developer Mode already enabled"
 } else {
-    # Try to enable it (requires admin)
-    try {
-        if (-not (Test-Path $devModePath)) {
-            New-Item -Path $devModePath -Force | Out-Null
-        }
-        Set-ItemProperty -Path $devModePath -Name AllowDevelopmentWithoutDevLicense -Value 1
+    # Try to enable it (requires admin) - use SilentlyContinue to avoid terminating error
+    if (-not (Test-Path $devModePath)) {
+        New-Item -Path $devModePath -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    Set-ItemProperty -Path $devModePath -Name AllowDevelopmentWithoutDevLicense -Value 1 -ErrorAction SilentlyContinue
+    # Check if it worked
+    $devModeEnabled = (Get-ItemProperty -Path $devModePath -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue).AllowDevelopmentWithoutDevLicense
+    if ($devModeEnabled -eq 1) {
         Write-Success "Developer Mode enabled"
-    } catch {
+    } else {
         Write-Host "    [WARN] Could not enable Developer Mode (need admin)" -ForegroundColor Yellow
         Write-Host "    Enable manually: Settings > Privacy & Security > For developers > Developer Mode" -ForegroundColor DarkGray
     }
