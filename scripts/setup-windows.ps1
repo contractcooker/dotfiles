@@ -255,8 +255,18 @@ if (-not (Test-Path $sshDir)) {
 }
 if (-not (Test-Path $knownHosts) -or -not (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet)) {
     Write-Host "    Adding GitHub to known_hosts..."
-    ssh-keyscan -t ed25519 github.com 2>$null >> $knownHosts
-    Write-Success "GitHub host key added"
+    $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
+    $ProgressPreference = 'SilentlyContinue'
+    try {
+        Invoke-WebRequest -Uri $knownHostsUrl -OutFile $knownHosts
+        $ProgressPreference = 'Continue'
+        Write-Success "GitHub host keys added"
+    } catch {
+        $ProgressPreference = 'Continue'
+        # Fallback to ssh-keyscan if download fails
+        ssh-keyscan -t ed25519 github.com 2>$null >> $knownHosts
+        Write-Success "GitHub host key added (via keyscan)"
+    }
 }
 
 if (-not (Test-Path "$ReposRoot\dev")) {
