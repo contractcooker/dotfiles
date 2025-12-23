@@ -345,6 +345,19 @@ if (Test-Path $DotfilesPath) {
 # =============================================================================
 Write-Step 7 $TotalSteps "Link Dotfiles"
 
+# Enable Developer Mode (required for symlinks without elevation)
+$devModePath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+if (-not (Test-Path $devModePath)) {
+    New-Item -Path $devModePath -Force | Out-Null
+}
+$devModeEnabled = (Get-ItemProperty -Path $devModePath -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue).AllowDevelopmentWithoutDevLicense
+if ($devModeEnabled -ne 1) {
+    Set-ItemProperty -Path $devModePath -Name AllowDevelopmentWithoutDevLicense -Value 1
+    Write-Success "Developer Mode enabled"
+} else {
+    Write-Success "Developer Mode already enabled"
+}
+
 $dotfilesHome = "$DotfilesPath\home"
 $backupDir = "$env:USERPROFILE\.dotfiles-backup"
 
