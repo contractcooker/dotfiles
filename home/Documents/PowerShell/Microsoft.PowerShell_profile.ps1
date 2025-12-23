@@ -58,6 +58,9 @@ function repos { Set-Location "$env:USERPROFILE\repos" }
 function dev { Set-Location "$env:USERPROFILE\repos\dev" }
 function dotfiles { Set-Location "$env:USERPROFILE\repos\dev\dotfiles" }
 
+# Chris Titus Tech Windows Utility
+function winutil { irm "https://christitus.com/win" | iex }
+
 # -----------------------------------------------------------------------------
 # Environment
 # -----------------------------------------------------------------------------
