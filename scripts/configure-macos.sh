@@ -273,14 +273,12 @@ apply_debloat_settings() {
     # -------------------------------------------------------------------------
     echo "    Misc:"
 
-    # Disable Handoff
-    defaults -currentHost write com.apple.coreservices.useractivityd ActivityReceivingAllowed -bool false
-    defaults -currentHost write com.apple.coreservices.useractivityd ActivityAdvertisingAllowed -bool false
-    echo "      ✓ Disable Handoff"
-
     # Disable feedback assistant auto-gather
     defaults write com.apple.appleseed.FeedbackAssistant Autogather -bool false
     echo "      ✓ Disable Feedback Assistant auto-gather"
+
+    # Note: Handoff left enabled for Universal Clipboard
+    # Toggle: System Settings → General → AirDrop & Handoff
 
     echo ""
     echo "    Note: Some settings require logout or restart to take effect."
