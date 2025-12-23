@@ -198,6 +198,48 @@ Windows detects hardware at install time and uses matching drivers.
 
 ---
 
+## ISO Naming Convention
+
+```
+Win11-Pro-24H2-MicroWin.iso
+Win11-Pro-25H2-MicroWin-2025-10.iso   (with date for tracking rebuilds)
+```
+
+Format: `Win11-[Edition]-[Version]-MicroWin[-Date].iso`
+
+---
+
+## Saving Your Config for Future Rebuilds
+
+When a new Windows version drops, you'll rebuild the ISO. Save your settings to make this quick.
+
+### Export WinUtil Config
+
+After dialing in your settings in winutil:
+1. Go to the config/export area
+2. Export to JSON
+3. Save as `dotfiles/windows/winutil-config.json`
+
+### Rebuild Workflow (New Windows Version)
+
+1. Run `winutil` → MicroWin tab
+2. Download new Windows ISO
+3. Import your saved JSON config
+4. Create ISO → Copy to Ventoy
+5. Delete old ISO from Ventoy (or keep for rollback)
+
+### Version Your Configs
+
+```
+dotfiles/windows/
+├── winutil-config.json           ← current config
+└── archive/
+    ├── winutil-config-24H2.json  ← old versions
+    └── winutil-config-25H2.json
+```
+
+---
+
 ## Receiving Future Updates
 
 With "Allow this PC to upgrade to Windows 11" checked, updates should come through Windows Update normally.
