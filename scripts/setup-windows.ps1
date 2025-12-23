@@ -121,7 +121,22 @@ if ($buckets -notcontains "extras") {
 # =============================================================================
 Write-Step 2 $TotalSteps "1Password"
 
-if (Test-Path "C:\Program Files\1Password\app\8\1Password.exe") {
+# Check common install locations and registry
+$1pPaths = @(
+    "C:\Program Files\1Password\app\8\1Password.exe",
+    "$env:LOCALAPPDATA\1Password\app\8\1Password.exe",
+    "$env:LOCALAPPDATA\Programs\1Password\app\8\1Password.exe"
+)
+$1pInstalled = $1pPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+# Also check registry for installed apps
+if (-not $1pInstalled) {
+    $1pReg = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+             Where-Object { $_.DisplayName -like "*1Password*" }
+    if ($1pReg) { $1pInstalled = $true }
+}
+
+if ($1pInstalled) {
     Write-Success "1Password installed"
 } else {
     Write-Host "    Downloading 1Password..." -NoNewline
