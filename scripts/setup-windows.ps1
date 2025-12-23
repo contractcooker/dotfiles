@@ -247,6 +247,12 @@ if ($wasLoggedIn) {
 # =============================================================================
 Write-Step 6 $TotalSteps "Clone Repositories"
 
+# TODO: TEMPORARY - remove after troubleshooting
+Write-Host "    Cleaning up partial clones (temporary)..." -ForegroundColor Yellow
+Remove-Item -Recurse -Force "$ReposRoot\dev\config" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "$ReposRoot\dev\dotfiles" -ErrorAction SilentlyContinue
+# END TEMPORARY
+
 # Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
 $sshDir = "$env:USERPROFILE\.ssh"
 $knownHosts = "$sshDir\known_hosts"
