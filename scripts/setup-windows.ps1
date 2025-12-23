@@ -572,7 +572,9 @@ if ($precommit) {
 }
 
 # Ensure uv tools are on PATH
+$ErrorActionPreference = "Continue"
 uv tool update-shell 2>$null
+$ErrorActionPreference = "Stop"
 
 # =============================================================================
 # 11. CLONE ALL REPOS
