@@ -7,29 +7,36 @@ Personal development environment configuration and setup scripts.
 ### macOS
 
 ```bash
-# One-liner
-curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-mac.sh | bash
+curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-mac.sh | zsh
 ```
 
-This installs Homebrew, Git, GitHub CLI, 1Password, Dropbox, configures git, authenticates with GitHub, sets up file sync, and clones all active repos.
+This will:
+- Install Homebrew, 1Password, and core CLI tools
+- Configure 1Password SSH agent and authenticate GitHub
+- Clone config and dotfiles repos, link shell/git config
+- Install Node.js (fnm), Claude Code, Python (uv)
+- Clone all repos from manifest
+- Interactive package selection (optional apps)
+- Configure macOS preferences (dev/debloat/personal)
+
+For non-interactive install (everything): `| zsh -s -- --all`
 
 ### Windows
 
 ```powershell
-# One-liner (run as Administrator)
+# Run as Administrator
 irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 -OutFile $env:TEMP\setup.ps1; & $env:TEMP\setup.ps1; rm $env:TEMP\setup.ps1
 ```
-
-This installs Git, GitHub CLI, Windows Terminal, 1Password, Dropbox, configures git, authenticates with GitHub, sets up file sync, and clones all active repos.
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
 
 ## Contents
 
-- `docs/` - Documentation for development environment strategies
-- `ssh/` - SSH configuration files and templates
-- `git/` - Git configuration files
+- `Brewfile` - Homebrew packages with [core] and [category] tags
+- `home/` - Dotfiles symlinked to ~/ (.zshrc, .gitconfig, starship.toml)
+- `claude/` - Claude Code global settings
 - `scripts/` - Setup and maintenance scripts
+- `docs/` - Strategy documentation
 
 ## Purpose
 
