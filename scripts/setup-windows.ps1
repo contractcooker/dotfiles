@@ -233,7 +233,7 @@ if ($wasLoggedIn) {
 } else {
     Write-Host "    Authenticating with GitHub..."
     Write-Host "    (Using SSH protocol with 1Password agent)"
-    gh auth login --web --git-protocol ssh --skip-ssh-key
+    gh auth login --web --git-protocol ssh --skip-ssh-key --scopes admin:public_key
     if ($LASTEXITCODE -eq 0) {
         Write-Success "GitHub authenticated"
     } else {
@@ -244,11 +244,23 @@ if ($wasLoggedIn) {
 
 # Ensure SSH key is added to GitHub
 Write-Host "    Checking SSH keys on GitHub..."
-$ghKeys = gh ssh-key list 2>$null
+$ErrorActionPreference = "Continue"
+$ghKeys = gh ssh-key list 2>&1
+$ErrorActionPreference = "Stop"
+
+# If we get a 404, we need to refresh auth with the right scope
+if ($ghKeys -match "404|admin:public_key") {
+    Write-Host "    Refreshing GitHub auth for SSH key access..."
+    gh auth refresh -h github.com -s admin:public_key
+    $ErrorActionPreference = "Continue"
+    $ghKeys = gh ssh-key list 2>&1
+    $ErrorActionPreference = "Stop"
+}
+
 $localKey = (ssh-add -L | Select-Object -First 1) 2>$null
 if ($localKey) {
-    $keyFingerprint = ($localKey -split ' ')[1].Substring(0, 30)
-    if ($ghKeys -and $ghKeys -match [regex]::Escape($keyFingerprint.Substring(0, 20))) {
+    $keyPart = ($localKey -split ' ')[1]
+    if ($keyPart -and $ghKeys -match $keyPart.Substring(0, 20)) {
         Write-Success "SSH key already on GitHub"
     } else {
         Write-Host "    Adding SSH key to GitHub..."
