@@ -87,6 +87,13 @@ if (Get-Command scoop -ErrorAction SilentlyContinue) {
     Write-Success "Scoop installed"
 }
 
+# Git is required for buckets
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "    Installing git (required for buckets)..."
+    scoop install git
+    Refresh-Path
+}
+
 # Add extras bucket
 $buckets = scoop bucket list 2>$null
 if ($buckets -notcontains "extras") {
