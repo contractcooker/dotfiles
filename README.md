@@ -25,7 +25,7 @@ For non-interactive install (everything): `| zsh -s -- --all`
 
 ```powershell
 # Run as Administrator
-irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
+irm "https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1?v=$(Get-Random)" | iex
 ```
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
