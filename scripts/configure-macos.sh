@@ -1,24 +1,28 @@
 #!/bin/bash
 # Configure macOS system preferences
 #
-# Two sections:
+# Three sections:
 #   1. Dev Settings - Recommended for development workflows
-#   2. Personal Settings - Subjective preferences (optional)
+#   2. Debloat - Disable telemetry, Siri, and unnecessary services
+#   3. Personal Settings - Subjective preferences (optional)
 #
 # Usage:
 #   ./configure-macos.sh              # Interactive mode
 #   ./configure-macos.sh --all        # Apply all settings
 #   ./configure-macos.sh --dev-only   # Only dev settings
+#   ./configure-macos.sh --debloat    # Only debloat settings
 
 set -e
 
 # Parse arguments
 APPLY_ALL=false
 DEV_ONLY=false
+DEBLOAT_ONLY=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --all) APPLY_ALL=true; shift ;;
         --dev-only) DEV_ONLY=true; shift ;;
+        --debloat) DEBLOAT_ONLY=true; shift ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
@@ -168,6 +172,122 @@ apply_dev_settings() {
 }
 
 # =============================================================================
+# DEBLOAT SETTINGS
+# =============================================================================
+
+apply_debloat_settings() {
+    echo ""
+    echo "==> Applying Debloat Settings"
+
+    # -------------------------------------------------------------------------
+    # Siri
+    # -------------------------------------------------------------------------
+    echo "    Siri:"
+
+    # Disable Siri
+    defaults write com.apple.assistant.support "Assistant Enabled" -bool false
+    echo "      ✓ Disable Siri"
+
+    # Disable Siri voice feedback
+    defaults write com.apple.assistant.backedup "Use device speaker for TTS" -int 3
+    echo "      ✓ Disable Siri voice feedback"
+
+    # Remove Siri from menu bar
+    defaults write com.apple.Siri StatusMenuVisible -bool false
+    echo "      ✓ Remove Siri from menu bar"
+
+    # -------------------------------------------------------------------------
+    # Analytics & Telemetry
+    # -------------------------------------------------------------------------
+    echo "    Analytics:"
+
+    # Disable Apple analytics
+    defaults write com.apple.analyticsd isOptedIn -bool false
+    echo "      ✓ Disable Apple analytics"
+
+    # Disable crash reporter
+    defaults write com.apple.CrashReporter DialogType -string "none"
+    echo "      ✓ Disable crash reporter dialogs"
+
+    # Disable personalized ads
+    defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool false
+    echo "      ✓ Disable personalized ads"
+
+    # Disable Spotlight suggestions (sends data to Apple)
+    defaults write com.apple.spotlight orderedItems -array \
+        '{"enabled" = 1;"name" = "APPLICATIONS";}' \
+        '{"enabled" = 1;"name" = "DIRECTORIES";}' \
+        '{"enabled" = 1;"name" = "PDF";}' \
+        '{"enabled" = 1;"name" = "DOCUMENTS";}' \
+        '{"enabled" = 1;"name" = "PRESENTATIONS";}' \
+        '{"enabled" = 1;"name" = "SPREADSHEETS";}' \
+        '{"enabled" = 1;"name" = "SOURCE";}' \
+        '{"enabled" = 0;"name" = "MENU_EXPRESSION";}' \
+        '{"enabled" = 0;"name" = "MENU_WEBSEARCH";}' \
+        '{"enabled" = 0;"name" = "MENU_SPOTLIGHT_SUGGESTIONS";}'
+    echo "      ✓ Disable Spotlight web suggestions"
+
+    # -------------------------------------------------------------------------
+    # Game Center
+    # -------------------------------------------------------------------------
+    echo "    Game Center:"
+
+    # Disable Game Center
+    defaults write com.apple.gamed Disabled -bool true
+    echo "      ✓ Disable Game Center"
+
+    # -------------------------------------------------------------------------
+    # Safari (if used) - may fail on sandboxed Safari
+    # -------------------------------------------------------------------------
+    echo "    Safari:"
+
+    # Disable Safari suggestions (may fail if Safari sandboxed)
+    if defaults write com.apple.Safari UniversalSearchEnabled -bool false 2>/dev/null && \
+       defaults write com.apple.Safari SuppressSearchSuggestions -bool true 2>/dev/null; then
+        echo "      ✓ Disable Safari suggestions"
+    else
+        echo "      ⚠ Safari suggestions (configure in Safari → Settings)"
+    fi
+
+    # Don't send search queries to Apple
+    if defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true 2>/dev/null; then
+        echo "      ✓ Enable Do Not Track"
+    else
+        echo "      ⚠ Do Not Track (configure in Safari → Settings)"
+    fi
+
+    # -------------------------------------------------------------------------
+    # Mail (if used) - may fail on sandboxed Mail
+    # -------------------------------------------------------------------------
+    echo "    Mail:"
+
+    # Disable remote content in Mail (tracking pixels)
+    if defaults write com.apple.mail-shared DisableURLLoading -bool true 2>/dev/null; then
+        echo "      ✓ Disable remote content loading"
+    else
+        echo "      ⚠ Remote content (configure in Mail → Settings → Privacy)"
+    fi
+
+    # -------------------------------------------------------------------------
+    # Misc
+    # -------------------------------------------------------------------------
+    echo "    Misc:"
+
+    # Disable Handoff
+    defaults -currentHost write com.apple.coreservices.useractivityd ActivityReceivingAllowed -bool false
+    defaults -currentHost write com.apple.coreservices.useractivityd ActivityAdvertisingAllowed -bool false
+    echo "      ✓ Disable Handoff"
+
+    # Disable feedback assistant auto-gather
+    defaults write com.apple.appleseed.FeedbackAssistant Autogather -bool false
+    echo "      ✓ Disable Feedback Assistant auto-gather"
+
+    echo ""
+    echo "    Note: Some settings require logout or restart to take effect."
+    echo "    For complete privacy, also check System Settings → Privacy & Security."
+}
+
+# =============================================================================
 # PERSONAL SETTINGS
 # =============================================================================
 
@@ -254,20 +374,28 @@ apply_personal_settings() {
 
 if [ "$APPLY_ALL" = true ]; then
     apply_dev_settings
+    apply_debloat_settings
     apply_personal_settings
 elif [ "$DEV_ONLY" = true ]; then
     apply_dev_settings
+elif [ "$DEBLOAT_ONLY" = true ]; then
+    apply_debloat_settings
 else
     # Interactive mode
     echo ""
 
     if command -v gum &> /dev/null; then
-        CHOICES=$(gum choose --no-limit --selected="Dev Settings" \
+        CHOICES=$(gum choose --no-limit --selected="Dev Settings,Debloat" \
             "Dev Settings" \
+            "Debloat" \
             "Personal Settings")
 
         if echo "$CHOICES" | grep -q "Dev Settings"; then
             apply_dev_settings
+        fi
+
+        if echo "$CHOICES" | grep -q "Debloat"; then
+            apply_debloat_settings
         fi
 
         if echo "$CHOICES" | grep -q "Personal Settings"; then
@@ -279,6 +407,11 @@ else
         read -p "    Apply Dev Settings? [Y/n] " DEV_CHOICE
         if [[ ! "$DEV_CHOICE" =~ ^[Nn]$ ]]; then
             apply_dev_settings
+        fi
+
+        read -p "    Apply Debloat Settings? [Y/n] " DEBLOAT_CHOICE
+        if [[ ! "$DEBLOAT_CHOICE" =~ ^[Nn]$ ]]; then
+            apply_debloat_settings
         fi
 
         read -p "    Apply Personal Settings? [y/N] " PERSONAL_CHOICE
