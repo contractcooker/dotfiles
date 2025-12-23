@@ -238,30 +238,8 @@ if ($ghToken) {
     }
 }
 
-# Try to check/add SSH key (optional - cloning works without this if key already on GitHub)
-$ghKeys = gh ssh-key list 2>&1
-if ($ghKeys -match "404|insufficient") {
-    Write-Host "    [INFO] SSH key management scope not available - skipping auto-add" -ForegroundColor DarkGray
-    Write-Host "    (Your SSH key is likely already on GitHub from a previous setup)" -ForegroundColor DarkGray
-} else {
-    $localKey = (ssh-add -L | Select-Object -First 1) 2>$null
-    if ($localKey) {
-        $keyPart = ($localKey -split ' ')[1]
-        if ($keyPart -and $ghKeys -match $keyPart.Substring(0, 20)) {
-            Write-Success "SSH key already on GitHub"
-        } else {
-            Write-Host "    Adding SSH key to GitHub..."
-            $localKey | gh ssh-key add -t "1Password-$env:COMPUTERNAME"
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "SSH key added to GitHub"
-            } else {
-                Write-Host "    [WARN] Could not add SSH key automatically" -ForegroundColor Yellow
-            }
-        }
-    } else {
-        Write-Host "    [WARN] No SSH key found in agent" -ForegroundColor Yellow
-    }
-}
+# SSH key check is optional - skip it to avoid complications with scopes
+# The key is likely already on GitHub from initial setup
 
 # =============================================================================
 # 6. CLONE CONFIG + DOTFILES
@@ -274,7 +252,18 @@ $sshConfig = "$sshDir\config"
 if (-not (Test-Path $sshDir)) {
     New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
 }
-if (-not (Test-Path $sshConfig)) {
+
+# Check if config needs to be created or fixed (backslashes don't work)
+$needsConfig = -not (Test-Path $sshConfig)
+if (-not $needsConfig -and (Test-Path $sshConfig)) {
+    $existingConfig = Get-Content $sshConfig -Raw
+    if ($existingConfig -match '\\\\\.\\\\pipe') {
+        Write-Host "    Fixing SSH config (backslashes -> forward slashes)..."
+        $needsConfig = $true
+    }
+}
+
+if ($needsConfig) {
     Write-Host "    Creating SSH config for 1Password agent..."
     $sshConfigContent = @"
 Host github.com
@@ -320,12 +309,14 @@ if (Test-Path $ConfigPath) {
 } else {
     Write-Host "    Cloning config..."
     Push-Location "$ReposRoot\dev"
-    $cloneOutput = gh repo clone config 2>&1
+    # Temporarily allow stderr (gh clone outputs progress to stderr)
+    $ErrorActionPreference = "Continue"
+    gh repo clone config 2>&1 | Out-Null
     $cloneExitCode = $LASTEXITCODE
+    $ErrorActionPreference = "Stop"
     Pop-Location
     if ($cloneExitCode -ne 0 -or -not (Test-Path $ConfigPath)) {
-        Write-Host "    [ERROR] Failed to clone config" -ForegroundColor Red
-        Write-Host "    Output: $cloneOutput" -ForegroundColor Red
+        Write-Host "    [ERROR] Failed to clone config (exit code: $cloneExitCode)" -ForegroundColor Red
         exit 1
     }
     Write-Success "config cloned"
@@ -336,12 +327,14 @@ if (Test-Path $DotfilesPath) {
 } else {
     Write-Host "    Cloning dotfiles..."
     Push-Location "$ReposRoot\dev"
-    $cloneOutput = gh repo clone dotfiles 2>&1
+    # Temporarily allow stderr (gh clone outputs progress to stderr)
+    $ErrorActionPreference = "Continue"
+    gh repo clone dotfiles 2>&1 | Out-Null
     $cloneExitCode = $LASTEXITCODE
+    $ErrorActionPreference = "Stop"
     Pop-Location
     if ($cloneExitCode -ne 0 -or -not (Test-Path $DotfilesPath)) {
-        Write-Host "    [ERROR] Failed to clone dotfiles" -ForegroundColor Red
-        Write-Host "    Output: $cloneOutput" -ForegroundColor Red
+        Write-Host "    [ERROR] Failed to clone dotfiles (exit code: $cloneExitCode)" -ForegroundColor Red
         exit 1
     }
     Write-Success "dotfiles cloned"
