@@ -139,7 +139,27 @@ if (-not $1pInstalled) {
 
 if ($1pInstalled) {
     Write-Success "1Password installed"
+}
+
+# Force-install 1Password Edge extension via policy
+$edgeExtPath = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
+$1pExtId = "dppgmdbiimibapkepcbdbmkaabgiofem;https://edge.microsoft.com/extensionwebstorebase/v1/crx"
+if (-not (Test-Path $edgeExtPath)) {
+    New-Item -Path $edgeExtPath -Force | Out-Null
+}
+$existingExts = Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue
+$1pExtInstalled = $existingExts.PSObject.Properties.Value -contains $1pExtId
+if (-not $1pExtInstalled) {
+    $nextId = ((Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue).PSObject.Properties.Name |
+               Where-Object { $_ -match '^\d+$' } | Measure-Object -Maximum).Maximum + 1
+    if (-not $nextId) { $nextId = 1 }
+    New-ItemProperty -Path $edgeExtPath -Name $nextId -Value $1pExtId -PropertyType String -Force | Out-Null
+    Write-Success "1Password Edge extension will install on next Edge launch"
 } else {
+    Write-Success "1Password Edge extension configured"
+}
+
+if (-not $1pInstalled) {
     Write-Host "    Downloading 1Password..." -NoNewline
     $1pInstaller = "$env:TEMP\1PasswordSetup-latest.exe"
     $ProgressPreference = 'SilentlyContinue'  # Speed up download
