@@ -25,7 +25,7 @@ For non-interactive install (everything): `| zsh -s -- --all`
 
 ```powershell
 # Run as Administrator
-irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 -OutFile $env:TEMP\setup.ps1; & $env:TEMP\setup.ps1; rm $env:TEMP\setup.ps1
+irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
 ```
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
