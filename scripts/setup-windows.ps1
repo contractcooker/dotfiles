@@ -282,16 +282,16 @@ if (-not (Test-Path $sshDir)) {
 }
 if (-not (Test-Path $sshConfig)) {
     Write-Host "    Creating SSH config for 1Password agent..."
-    @"
-# Git services
+    $sshConfigContent = @"
 Host github.com
   HostName github.com
   User git
+  IdentityAgent "\\.\pipe\openssh-ssh-agent"
 
-# Default - 1Password SSH agent
 Host *
   IdentityAgent "\\.\pipe\openssh-ssh-agent"
-"@ | Out-File -FilePath $sshConfig -Encoding utf8
+"@
+    [System.IO.File]::WriteAllText($sshConfig, $sshConfigContent)
     Write-Success "SSH config created"
 }
 
