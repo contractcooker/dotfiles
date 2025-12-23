@@ -124,11 +124,15 @@ Write-Step 2 $TotalSteps "1Password"
 if (Test-Path "C:\Program Files\1Password\app\8\1Password.exe") {
     Write-Success "1Password installed"
 } else {
-    Write-Host "    Downloading 1Password..."
+    Write-Host "    Downloading 1Password..." -NoNewline
     $1pInstaller = "$env:TEMP\1PasswordSetup-latest.exe"
+    $ProgressPreference = 'SilentlyContinue'  # Speed up download
     Invoke-WebRequest -Uri "https://downloads.1password.com/win/1PasswordSetup-latest.exe" -OutFile $1pInstaller
-    Write-Host "    Installing 1Password (silent)..."
+    $ProgressPreference = 'Continue'
+    Write-Host " done" -ForegroundColor Green
+    Write-Host "    Installing 1Password (silent, may take a minute)..." -NoNewline
     Start-Process -FilePath $1pInstaller -ArgumentList "--silent" -Wait
+    Write-Host " done" -ForegroundColor Green
     Remove-Item $1pInstaller -ErrorAction SilentlyContinue
     Write-Success "1Password installed"
 }
