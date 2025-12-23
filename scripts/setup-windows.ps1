@@ -125,7 +125,8 @@ Write-Step 2 $TotalSteps "1Password"
 $1pPaths = @(
     "C:\Program Files\1Password\app\8\1Password.exe",
     "$env:LOCALAPPDATA\1Password\app\8\1Password.exe",
-    "$env:LOCALAPPDATA\Programs\1Password\app\8\1Password.exe"
+    "$env:LOCALAPPDATA\Programs\1Password\app\8\1Password.exe",
+    "$env:LOCALAPPDATA\Microsoft\WindowsApps\1Password.exe"
 )
 $1pInstalled = $1pPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
