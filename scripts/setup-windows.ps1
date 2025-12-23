@@ -284,8 +284,14 @@ if (Test-Path $ConfigPath) {
 } else {
     Write-Host "    Cloning config..."
     Push-Location "$ReposRoot\dev"
-    gh repo clone config
+    $cloneOutput = gh repo clone config 2>&1
+    $cloneExitCode = $LASTEXITCODE
     Pop-Location
+    if ($cloneExitCode -ne 0 -or -not (Test-Path $ConfigPath)) {
+        Write-Host "    [ERROR] Failed to clone config" -ForegroundColor Red
+        Write-Host "    Output: $cloneOutput" -ForegroundColor Red
+        exit 1
+    }
     Write-Success "config cloned"
 }
 
@@ -294,8 +300,14 @@ if (Test-Path $DotfilesPath) {
 } else {
     Write-Host "    Cloning dotfiles..."
     Push-Location "$ReposRoot\dev"
-    gh repo clone dotfiles
+    $cloneOutput = gh repo clone dotfiles 2>&1
+    $cloneExitCode = $LASTEXITCODE
     Pop-Location
+    if ($cloneExitCode -ne 0 -or -not (Test-Path $DotfilesPath)) {
+        Write-Host "    [ERROR] Failed to clone dotfiles" -ForegroundColor Red
+        Write-Host "    Output: $cloneOutput" -ForegroundColor Red
+        exit 1
+    }
     Write-Success "dotfiles cloned"
 }
 
