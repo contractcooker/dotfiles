@@ -272,6 +272,7 @@ Write-Step 6 $TotalSteps "Clone Repositories"
 Write-Host "    Cleaning up partial clones (temporary)..." -ForegroundColor Yellow
 Remove-Item -Recurse -Force "$ReposRoot\dev\config" -ErrorAction SilentlyContinue
 Remove-Item -Recurse -Force "$ReposRoot\dev\dotfiles" -ErrorAction SilentlyContinue
+Remove-Item -Force "$env:USERPROFILE\.ssh\config" -ErrorAction SilentlyContinue
 # END TEMPORARY
 
 # Set up SSH for 1Password agent (needed before clone)
