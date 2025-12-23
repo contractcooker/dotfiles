@@ -308,6 +308,10 @@ Host *
     Write-Success "SSH config created"
 }
 
+# Force git to use Windows OpenSSH (not Git Bash's ssh) for 1Password agent compatibility
+git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+Write-Success "Git configured to use Windows OpenSSH"
+
 # Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
 $knownHosts = "$sshDir\known_hosts"
 if (-not (Test-Path $knownHosts) -or -not (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet)) {
