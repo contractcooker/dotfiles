@@ -280,10 +280,10 @@ if (-not (Test-Path $sshConfig)) {
 Host github.com
   HostName github.com
   User git
-  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+  IdentityAgent "//./pipe/openssh-ssh-agent"
 
 Host *
-  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+  IdentityAgent "//./pipe/openssh-ssh-agent"
 "@
     [System.IO.File]::WriteAllText($sshConfig, $sshConfigContent)
     Write-Success "SSH config created"
@@ -508,7 +508,7 @@ Host *.$homelabDomain
 
 # Default - 1Password SSH agent
 Host *
-  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+  IdentityAgent "//./pipe/openssh-ssh-agent"
 "@
         [System.IO.File]::WriteAllText($sshConfig, $sshConfigContent)
         Write-Success "SSH config created (with homelab)"
@@ -521,7 +521,7 @@ Host github.com
 
 # Default - 1Password SSH agent
 Host *
-  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+  IdentityAgent "//./pipe/openssh-ssh-agent"
 "@
         [System.IO.File]::WriteAllText($sshConfig, $sshConfigContent)
         Write-Success "SSH config created"
