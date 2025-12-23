@@ -220,6 +220,9 @@ if ($All) {
         Install-WingetPackage $pkg
     }
 } else {
+    # Refresh PATH to ensure gum is available (especially when run via iex)
+    Refresh-Path
+
     # Interactive mode with gum
 
     # Build scoop options (uninstalled only)
