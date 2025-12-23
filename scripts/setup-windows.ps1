@@ -80,7 +80,7 @@ if (Get-Command scoop -ErrorAction SilentlyContinue) {
 } else {
     Write-Host "    Installing Scoop..."
     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-    Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+    iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
     Refresh-Path
     Write-Success "Scoop installed"
 }
