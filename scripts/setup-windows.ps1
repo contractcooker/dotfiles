@@ -185,8 +185,13 @@ Refresh-Path
 # =============================================================================
 Write-Step 5 $TotalSteps "GitHub Authentication"
 
+# Check auth status (suppress errors - not logged in is expected)
+$ErrorActionPreference = "Continue"
 $ghStatus = gh auth status 2>&1
-if ($LASTEXITCODE -eq 0) {
+$wasLoggedIn = $LASTEXITCODE -eq 0
+$ErrorActionPreference = "Stop"
+
+if ($wasLoggedIn) {
     $ghUser = gh api user --jq '.login' 2>$null
     Write-Success "Authenticated as $ghUser"
 } else {
