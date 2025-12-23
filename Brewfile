@@ -19,6 +19,7 @@ brew "gum"                        # [core] Terminal UI for scripts
 brew "mas"                        # [core] Mac App Store CLI
 
 brew "gitleaks"                   # [security] Scan repos for secrets
+brew "git-filter-repo"            # [security] Rewrite git history (remove secrets/files)
 brew "bash"                       # [shell] Updated bash (macOS has old 3.x)
 brew "zsh-autosuggestions"        # [shell] Fish-like autosuggestions
 brew "zsh-syntax-highlighting"    # [shell] Fish-like syntax highlighting

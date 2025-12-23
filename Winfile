@@ -25,6 +25,7 @@ scoop "uv"                        # [core] Python version/package manager
 scoop "starship"                  # [core] Cross-shell prompt
 
 scoop "gitleaks"                  # [security] Scan repos for secrets
+scoop "git-filter-repo"           # [security] Rewrite git history (remove secrets/files)
 scoop "ollama"                    # [ai] Run LLMs locally (uses CUDA)
 scoop "minicom"                   # [hardware] Serial port terminal
 scoop "adb"                       # [mobile] Android Debug Bridge
