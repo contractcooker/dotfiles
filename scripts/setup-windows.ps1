@@ -560,7 +560,9 @@ if ($pythonInstalled) {
 }
 
 # Install pre-commit
+$ErrorActionPreference = "Continue"
 $precommit = uv tool list 2>$null | Select-String "pre-commit"
+$ErrorActionPreference = "Stop"
 if ($precommit) {
     Write-Success "pre-commit installed"
 } else {
