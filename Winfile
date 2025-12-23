@@ -1,0 +1,73 @@
+# Winfile - Windows package manifest
+#
+# Format: scoop|winget "name" # [tag] Description
+#   [core]     = installed automatically
+#   [category] = optional, shown in interactive picker grouped by category
+#
+# Usage:
+#   ./scripts/install-packages.ps1    # Interactive (parses this file)
+#   ./scripts/install-packages.ps1 --all   # Install everything
+#
+# Package managers:
+#   scoop  - CLI tools (no admin, cleaner uninstall)
+#   winget - GUI apps (better for desktop software)
+
+# =============================================================================
+# Scoop Packages (CLI Tools)
+# =============================================================================
+
+scoop "git"                       # [core] Version control
+scoop "gh"                        # [core] GitHub CLI
+scoop "jq"                        # [core] JSON processor
+scoop "gum"                       # [core] Terminal UI for scripts
+scoop "fnm"                       # [core] Node.js version manager
+scoop "uv"                        # [core] Python version/package manager
+scoop "starship"                  # [core] Cross-shell prompt
+
+scoop "gitleaks"                  # [security] Scan repos for secrets
+scoop "ollama"                    # [ai] Run LLMs locally (uses CUDA)
+scoop "minicom"                   # [hardware] Serial port terminal
+scoop "adb"                       # [mobile] Android Debug Bridge
+
+# =============================================================================
+# Winget Packages (GUI Apps)
+# =============================================================================
+
+winget "AgileBits.1Password"              # [core] Password manager
+winget "Dropbox.Dropbox"                  # [core] File sync
+winget "Microsoft.WindowsTerminal"        # [core] Terminal emulator
+
+winget "Microsoft.VisualStudioCode"       # [dev] Code editor
+winget "JetBrains.Toolbox"                # [dev] JetBrains IDE manager
+winget "ScooterSoftware.BeyondCompare5"   # [dev] File/folder comparison
+
+winget "Nvidia.GeForceExperience"         # [gaming] NVIDIA drivers + overlay
+winget "Valve.Steam"                      # [gaming] Steam platform
+winget "GOG.Galaxy"                       # [gaming] GOG launcher
+winget "EpicGames.EpicGamesLauncher"      # [gaming] Epic Games launcher
+
+winget "Google.Chrome"                    # [browser] Chrome
+winget "AnyDeskSoftwareGmbH.AnyDesk"      # [utility] Remote desktop
+
+winget "SlackTechnologies.Slack"          # [communication] Team chat
+winget "Discord.Discord"                  # [communication] Voice/text chat
+winget "OpenWhisperSystems.Signal"        # [communication] Encrypted messaging
+winget "Zoom.Zoom"                        # [communication] Video conferencing
+
+winget "Spotify.Spotify"                  # [media] Music streaming
+winget "Plex.PlexMediaServer"             # [media] Media server
+
+# =============================================================================
+# Notes
+# =============================================================================
+#
+# Packages NOT included (handle separately):
+#   - 1Password CLI (use: op CLI from 1Password app)
+#   - Node.js (use: fnm install --lts)
+#   - Python (use: uv python install)
+#   - Claude Code (use: npm install -g @anthropic-ai/claude-code)
+#
+# Gaming rig specific:
+#   - GeForce Experience for driver updates and game optimization
+#   - Xbox Game Bar kept enabled via winutil (not installed here)
+#   - Ollama uses CUDA automatically with 3080 Ti

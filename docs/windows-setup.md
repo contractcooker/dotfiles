@@ -4,13 +4,23 @@ Development environment setup for Windows machines.
 
 ## Overview
 
-This guide mirrors the macOS setup but uses Windows-native tools where appropriate. The goal is consistency across platforms where possible (1Password, gh CLI, git config).
+This guide mirrors the macOS setup but uses Windows-native tools where appropriate. The goal is consistency across platforms where possible (1Password, gh CLI, git config, fnm, uv).
+
+## Pre-Installation (Optional)
+
+For a clean, debloated Windows 11 installation on unsupported hardware (like 7th gen Intel):
+
+1. Create debloated ISO with MicroWin
+2. Use Rufus to bypass TPM/CPU checks
+3. Run winutil post-install for additional tweaks
+
+See **[windows-preinstall.md](windows-preinstall.md)** for detailed instructions.
 
 ## Prerequisites
 
 - Windows 10/11
-- 1Password installed with SSH Agent enabled
 - Admin access for initial setup
+- 1Password account (for SSH keys)
 
 ## Quick Start
 
@@ -20,105 +30,112 @@ irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup
 ```
 
 This will:
-1. Install Git, GitHub CLI, Windows Terminal via winget
-2. Authenticate with GitHub (opens browser)
-3. Clone the private `config` repo (contains your personal settings)
-4. Configure git using values from `config/identity.json`
-5. Clone all repos listed in `config/repos.json`
-6. Set up SSH config using values from `config/hosts.json`
-
-## Manual Setup
-
-If you prefer to run steps manually:
-
-```powershell
-# 1. Install core tools via winget
-winget install Git.Git
-winget install GitHub.cli
-
-# 2. Restart terminal to pick up new PATH entries
-
-# 3. Authenticate GitHub CLI
-gh auth login --web --git-protocol ssh
-
-# 4. Clone config repo (private - has your personal settings)
-mkdir $HOME\repos\dev
-cd $HOME\repos\dev
-gh repo clone config
-
-# 5. Configure git from config
-$identity = Get-Content config\identity.json | ConvertFrom-Json
-git config --global user.name $identity.name
-git config --global user.email $identity.email
-git config --global init.defaultBranch main
-git config --global core.autocrlf true
-
-# 6. Clone dotfiles and other repos
-gh repo clone dotfiles
-.\dotfiles\scripts\clone-repos.ps1
-```
+1. Install Scoop (package manager for CLI tools)
+2. Install 1Password and configure SSH Agent
+3. Install core tools: git, gh, jq, gum, fnm, uv, starship
+4. Authenticate with GitHub (opens browser)
+5. Clone config and dotfiles repos
+6. Link dotfiles (PowerShell profile, starship config)
+7. Install Node.js (via fnm) and Claude Code
+8. Configure git and SSH from config repo values
+9. Install Python (via uv)
+10. Clone all repos from manifest
+11. Offer optional package installation
+12. Configure Windows preferences
 
 ## Package Management
 
-### winget (Recommended)
+We use two package managers:
 
-Windows Package Manager - built into Windows 11, available for Windows 10.
+| Manager | Purpose | Examples |
+|---------|---------|----------|
+| **Scoop** | CLI tools | git, gh, fnm, uv, starship, ollama |
+| **winget** | GUI apps | 1Password, VS Code, Steam |
 
-```powershell
-# Install a package
-winget install <package-id>
+### Why both?
 
-# Search for packages
-winget search <query>
-
-# List installed
-winget list
-
-# Upgrade all
-winget upgrade --all
-```
+- **Scoop**: No admin required, cleaner uninstalls, better CLI ecosystem
+- **winget**: Built-in, better for desktop applications
 
 ### Core Packages
 
-```powershell
-# Development essentials
-winget install Git.Git
-winget install GitHub.cli
-winget install Microsoft.WindowsTerminal
-winget install Microsoft.VisualStudioCode
+Installed automatically via `setup-windows.ps1`:
 
-# Optional - Python and Node
-winget install Python.Python.3.12
-winget install OpenJS.NodeJS.LTS
+```
+Scoop: git, gh, jq, gum, fnm, uv, starship
+Winget: 1Password, Dropbox, Windows Terminal
 ```
 
-### Alternative: Scoop
+### Optional Packages
 
-For more Unix-like experience and portable apps:
+Interactive selection via `install-packages.ps1`:
 
 ```powershell
-# Install Scoop
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
-
-# Then install packages
-scoop install git gh python nodejs
+.\install-packages.ps1        # Interactive mode
+.\install-packages.ps1 -All   # Install everything
 ```
+
+Packages are defined in `Winfile` (like macOS Brewfile).
+
+## Individual Scripts
+
+Run standalone if needed:
+
+```powershell
+# Full setup (interactive)
+.\scripts\setup-windows.ps1
+
+# Package installation only
+.\scripts\install-packages.ps1
+
+# Windows preferences only
+.\scripts\configure-windows.ps1
+
+# Verify environment
+.\scripts\verify-setup.ps1
+
+# Clone all repos from manifest
+.\scripts\clone-repos.ps1
+```
+
+## Shell Configuration
+
+### PowerShell + Starship
+
+Primary shell is PowerShell with starship prompt for a modern experience:
+
+```powershell
+# Profile location
+$PROFILE  # Usually: Documents\PowerShell\Microsoft.PowerShell_profile.ps1
+```
+
+Profile includes:
+- Starship prompt initialization
+- fnm auto-switching for Node versions
+- Git aliases (gs, gd, gl, gp)
+- Navigation shortcuts (.., ..., repos, dotfiles)
+
+### Git Bash
+
+Available when you need Unix-like commands. Installed with Git.
 
 ## SSH Configuration
 
-### 1Password SSH Agent (Recommended)
+### 1Password SSH Agent
 
 Same strategy as macOS - 1Password manages all SSH keys.
 
 **Enable in 1Password:**
 1. Open 1Password → Settings → Developer
 2. Enable "Use the SSH Agent"
-3. Enable "Integrate with 1Password CLI" (optional)
 
-**SSH config is auto-generated** by the setup script using values from `config/hosts.json`. The config uses the Windows named pipe for 1Password: `\\.\pipe\openssh-ssh-agent`
+**SSH config** is auto-generated using the Windows named pipe:
+```
+Host *
+  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+```
 
-### Verify SSH is working
+### Verify SSH
 
 ```powershell
 ssh -T git@github.com
@@ -127,43 +144,16 @@ ssh -T git@github.com
 
 ## Git Configuration
 
-Git config is set automatically from `config/identity.json`. Windows-specific setting:
+Git config is set automatically from `config/identity.json`. Windows-specific settings:
 
 ```powershell
-# Convert LF to CRLF on checkout, CRLF to LF on commit
-git config --global core.autocrlf true
-```
-
-### Git Credential Manager
-
-Git for Windows includes Git Credential Manager. For SSH auth via 1Password, this isn't needed, but it's there as fallback for HTTPS.
-
-## Terminal Setup
-
-### Windows Terminal (Recommended)
-
-```powershell
-winget install Microsoft.WindowsTerminal
-```
-
-**Configure default profile:**
-1. Open Settings (Ctrl+,)
-2. Set default profile to PowerShell or Git Bash
-3. Optional: Add custom color scheme
-
-### Git Bash
-
-Included with Git for Windows. Provides Unix-like environment:
-
-```powershell
-# Available after installing Git.Git
-# Access via: Start → Git Bash
-# Or: Right-click folder → "Git Bash Here"
+git config --global core.autocrlf true          # CRLF handling
+git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"  # 1Password compatibility
 ```
 
 ## Directory Structure
 
-Mirror the macOS structure:
+Same as macOS:
 
 ```
 C:\Users\<username>\repos\
@@ -176,23 +166,58 @@ C:\Users\<username>\repos\
 └── everything\
 ```
 
-PowerShell equivalent of `~/repos`:
+## Windows Preferences
+
+Configure via `configure-windows.ps1`:
+
+**Dev Settings:**
+- File Explorer: show extensions, hidden files
+- Git: autocrlf, Windows OpenSSH
+- Power plan: High Performance
+
+**Debloat:**
+- Disable telemetry and ads
+- Disable Cortana
+- Keep Xbox Game Bar (for gaming)
+
+**Personal:**
+- Dark mode
+- Taskbar cleanup
+- Disable mouse acceleration
+
+## Gaming Rig (3080 Ti)
+
+For systems with NVIDIA GPUs:
 
 ```powershell
-# In PowerShell, ~ expands to $HOME (C:\Users\<username>)
-cd ~/repos/personal
+# Install GeForce Experience for driver updates
+winget install Nvidia.GeForceExperience
+
+# Install Ollama for local LLMs (uses CUDA automatically)
+scoop install ollama
+
+# Run a model
+ollama run llama2
 ```
 
 ## Platform Differences
 
 | Aspect | macOS | Windows |
 |--------|-------|---------|
-| Package manager | Homebrew | winget / Scoop |
-| Shell | zsh/bash | PowerShell / Git Bash |
+| Package manager | Homebrew | Scoop + winget |
+| Shell | zsh | PowerShell |
 | SSH agent socket | `~/Library/.../agent.sock` | `\\.\pipe\openssh-ssh-agent` |
-| Line endings | LF | CRLF (git handles conversion) |
-| Path separator | `/` | `\` (but `/` works in most tools) |
-| Home directory | `~` or `$HOME` | `~` or `$HOME` or `$env:USERPROFILE` |
+| Line endings | LF | CRLF (git handles) |
+| Profile | `.zshrc` | `Microsoft.PowerShell_profile.ps1` |
+
+## Claude Code on Windows
+
+Claude Code works on Windows but has some quirks:
+
+**CRLF Issues**: The Edit tool may fail with "unexpectedly modified" errors. Workarounds are documented in `~/.claude/CLAUDE.md`:
+- Use `sed -i` for single-line changes
+- Use heredocs to rewrite entire files
+- Use PowerShell for complex .ps1 edits
 
 ## Troubleshooting
 
@@ -201,7 +226,11 @@ cd ~/repos/personal
 1. Verify 1Password SSH Agent is enabled in settings
 2. Check `~\.ssh\config` has correct `IdentityAgent` path
 3. Restart terminal after enabling agent
-4. Try: `ssh-add -l` (should list keys from 1Password)
+4. Ensure Windows OpenSSH Agent service is disabled:
+   ```powershell
+   Get-Service ssh-agent
+   # Should show: Status = Stopped, StartType = Disabled
+   ```
 
 ### Git push fails with permission denied
 
@@ -209,11 +238,24 @@ cd ~/repos/personal
 # Verify SSH works
 ssh -T git@github.com
 
-# If not, check gh auth status
+# Check gh auth status
 gh auth status
 
 # Re-authenticate if needed
-gh auth login --web --git-protocol ssh
+gh auth login --web --git-protocol ssh --skip-ssh-key
+```
+
+### Scoop commands fail
+
+```powershell
+# Update Scoop
+scoop update
+
+# Reset a package
+scoop reset <package>
+
+# Check for issues
+scoop checkup
 ```
 
 ### winget not found
@@ -223,7 +265,9 @@ gh auth login --web --git-protocol ssh
 
 ## References
 
+- [Scoop](https://scoop.sh/)
+- [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
 - [1Password SSH Agent - Windows](https://developer.1password.com/docs/ssh/get-started/#step-3-turn-on-the-1password-ssh-agent)
-- [Git for Windows](https://gitforwindows.org/)
-- [Windows Package Manager (winget)](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
-- [Windows Terminal](https://docs.microsoft.com/en-us/windows/terminal/)
+- [Starship Prompt](https://starship.rs/)
+- [fnm - Fast Node Manager](https://github.com/Schniz/fnm)
+- [uv - Python Manager](https://github.com/astral-sh/uv)

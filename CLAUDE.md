@@ -20,43 +20,59 @@ irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup
 
 ## Commands
 
+### macOS
 ```bash
-# Full setup (interactive)
-~/repos/dev/dotfiles/scripts/setup-mac.sh
-
-# Individual scripts (can run standalone)
+~/repos/dev/dotfiles/scripts/setup-mac.sh          # Full setup (interactive)
 ~/repos/dev/dotfiles/scripts/install-packages.sh   # Homebrew packages
 ~/repos/dev/dotfiles/scripts/configure-dev.sh      # Git, SSH, Node, Python
 ~/repos/dev/dotfiles/scripts/configure-macos.sh    # macOS preferences
 ~/repos/dev/dotfiles/scripts/verify-setup.sh       # Verify environment
+~/repos/dev/dotfiles/scripts/clone-repos.sh        # Clone repos from manifest
+~/repos/dev/dotfiles/scripts/gh-create <name>      # Create new GitHub repo
+```
 
-# Clone all repos from manifest
-~/repos/dev/dotfiles/scripts/clone-repos.sh
-
-# Create a new GitHub repo (run from repo root after initial commit)
-~/repos/dev/dotfiles/scripts/gh-create <repo-name> [description]
+### Windows (PowerShell)
+```powershell
+.\scripts\setup-windows.ps1       # Full setup (interactive)
+.\scripts\install-packages.ps1    # Scoop + winget packages
+.\scripts\configure-windows.ps1   # Windows preferences
+.\scripts\verify-setup.ps1        # Verify environment
+.\scripts\clone-repos.ps1         # Clone repos from manifest
 ```
 
 ## Structure
 
-- `Brewfile` - Homebrew package manifest (core + optional packages)
+- `Brewfile` - macOS Homebrew package manifest
+- `Winfile` - Windows Scoop + winget package manifest
 - `scripts/`
-  - `setup-mac.sh` - Main orchestrator (calls other scripts)
-  - `install-packages.sh` - Interactive Homebrew package installer (uses gum)
-  - `configure-dev.sh` - Dev environment (Git, SSH, Node/fnm, Python/uv, Claude)
-  - `configure-macos.sh` - macOS system preferences (dev + personal sections)
-  - `verify-setup.sh` - Environment health check
-  - `setup-windows.ps1` - Windows bootstrap
-  - `clone-repos.sh` / `clone-repos.ps1` - Clone repos from manifest
-  - `gh-create` - Create new GitHub repos with standard settings
+  - **macOS**:
+    - `setup-mac.sh` - Main orchestrator
+    - `install-packages.sh` - Interactive Homebrew installer (uses gum)
+    - `configure-dev.sh` - Git, SSH, Node/fnm, Python/uv, Claude
+    - `configure-macos.sh` - macOS preferences (dev + personal)
+    - `verify-setup.sh` - Environment health check
+    - `clone-repos.sh` - Clone repos from manifest
+    - `link-dotfiles.sh` - Symlink home/* to ~
+  - **Windows**:
+    - `setup-windows.ps1` - Main orchestrator
+    - `install-packages.ps1` - Interactive Scoop + winget installer
+    - `configure-windows.ps1` - Windows preferences (dev + debloat + personal)
+    - `verify-setup.ps1` - Environment health check
+    - `clone-repos.ps1` - Clone repos from manifest
+  - **Shared**:
+    - `gh-create` - Create new GitHub repos
+- `home/` - Dotfiles to symlink
+  - `.zshrc`, `.gitconfig` - macOS shell/git config
+  - `.config/starship.toml` - Cross-platform prompt
+  - `Documents/PowerShell/Microsoft.PowerShell_profile.ps1` - Windows shell
 - `claude/` - Claude Code settings
-  - `global.md` - Global Claude settings (copied to ~/.claude/CLAUDE.md)
+  - `global.md` - Global settings (copied to ~/.claude/CLAUDE.md)
+  - `windows.md` - Windows-specific workarounds
 - `docs/` - Strategy documentation
+  - `windows-preinstall.md` - Microwin + winutil for debloated Windows
+  - `windows-setup.md` - Windows development guide
   - `dropbox-sync.md` - Cross-platform file sync
-  - `ssh-strategy.md` - SSH key management (1Password)
-  - `package-management.md` - Homebrew rationale
-  - `github-config.md` - Git and GitHub CLI config
-  - `windows-setup.md` - Windows development environment guide
+  - `ssh-strategy.md` - 1Password SSH management
 
 ## Relationship to config repo
 
@@ -72,7 +88,8 @@ Scripts read from `config` to personalize setup.
 
 ## Key Conventions
 
-- **Package management**: Homebrew on macOS, winget on Windows
+- **Package management**: Homebrew on macOS; Scoop (CLI) + winget (GUI) on Windows
+- **Version managers**: fnm for Node.js, uv for Python (both platforms)
 - **SSH**: All SSH keys managed via 1Password SSH agent on both platforms
 - **Git commits**: No AI attribution or co-author tags in commit messages
 - **New repos**: Use `gh-create` script (auto-updates config/repos.json)
