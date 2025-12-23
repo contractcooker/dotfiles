@@ -222,7 +222,8 @@ Refresh-Path
 Write-Step 5 $TotalSteps "GitHub Authentication"
 
 # Check auth status using gh auth token (more reliable than status)
-$ghToken = gh auth token 2>$null
+$ghToken = gh auth token -h github.com 2>$null
+Write-Host "    DEBUG: Token exists = $([bool]$ghToken), APPDATA = $env:APPDATA" -ForegroundColor DarkGray
 if ($ghToken) {
     $ghUser = gh api user --jq '.login' 2>$null
     Write-Success "Authenticated as $ghUser"
