@@ -24,8 +24,8 @@ For non-interactive install (everything): `| zsh -s -- --all`
 ### Windows
 
 ```powershell
-# Run as Administrator
-irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
+# Run as Administrator (API URL to avoid CDN caching during development)
+(irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"}) | iex
 ```
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
