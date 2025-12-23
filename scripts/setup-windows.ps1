@@ -221,13 +221,9 @@ Refresh-Path
 # =============================================================================
 Write-Step 5 $TotalSteps "GitHub Authentication"
 
-# Check auth status (suppress errors - not logged in is expected)
-$ErrorActionPreference = "Continue"
-$ghStatus = gh auth status 2>&1
-$wasLoggedIn = $LASTEXITCODE -eq 0
-$ErrorActionPreference = "Stop"
-
-if ($wasLoggedIn) {
+# Check auth status using gh auth token (more reliable than status)
+$ghToken = gh auth token 2>$null
+if ($ghToken) {
     $ghUser = gh api user --jq '.login' 2>$null
     Write-Success "Authenticated as $ghUser"
 } else {
@@ -242,19 +238,12 @@ if ($wasLoggedIn) {
     }
 }
 
-# Ensure SSH key is added to GitHub
-Write-Host "    Checking SSH keys on GitHub..."
-$ErrorActionPreference = "Continue"
+# Check if we have admin:public_key scope (needed for SSH key management)
 $ghKeys = gh ssh-key list 2>&1
-$ErrorActionPreference = "Stop"
-
-# If we get a 404, we need to refresh auth with the right scope
-if ($ghKeys -match "404|admin:public_key") {
-    Write-Host "    Refreshing GitHub auth for SSH key access..."
+if ($ghKeys -match "404|insufficient") {
+    Write-Host "    Adding SSH key management scope..."
     gh auth refresh -h github.com -s admin:public_key
-    $ErrorActionPreference = "Continue"
-    $ghKeys = gh ssh-key list 2>&1
-    $ErrorActionPreference = "Stop"
+    $ghKeys = gh ssh-key list 2>$null
 }
 
 $localKey = (ssh-add -L | Select-Object -First 1) 2>$null
