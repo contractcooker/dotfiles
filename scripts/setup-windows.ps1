@@ -242,6 +242,27 @@ if ($wasLoggedIn) {
     }
 }
 
+# Ensure SSH key is added to GitHub
+Write-Host "    Checking SSH keys on GitHub..."
+$ghKeys = gh ssh-key list 2>$null
+$localKey = (ssh-add -L | Select-Object -First 1) 2>$null
+if ($localKey) {
+    $keyFingerprint = ($localKey -split ' ')[1].Substring(0, 30)
+    if ($ghKeys -and $ghKeys -match [regex]::Escape($keyFingerprint.Substring(0, 20))) {
+        Write-Success "SSH key already on GitHub"
+    } else {
+        Write-Host "    Adding SSH key to GitHub..."
+        $localKey | gh ssh-key add -t "1Password-$env:COMPUTERNAME"
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "SSH key added to GitHub"
+        } else {
+            Write-Host "    [WARN] Could not add SSH key automatically" -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "    [WARN] No SSH key found in agent" -ForegroundColor Yellow
+}
+
 # =============================================================================
 # 6. CLONE CONFIG + DOTFILES
 # =============================================================================
