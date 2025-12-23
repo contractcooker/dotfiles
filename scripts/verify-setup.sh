@@ -58,11 +58,14 @@ echo "==> Node.js"
 if command -v fnm &> /dev/null; then
     pass "fnm installed"
 
+    # Initialize fnm for this shell
+    eval "$(fnm env 2>/dev/null)"
+
     # Check if fnm is initialized (node available)
     if command -v node &> /dev/null; then
         NODE_VERSION=$(node --version 2>/dev/null)
         NODE_PATH=$(which node 2>/dev/null)
-        if [[ "$NODE_PATH" == *".fnm"* ]]; then
+        if [[ "$NODE_PATH" == *"fnm"* ]]; then
             pass "Node $NODE_VERSION (via fnm)"
         else
             warn "Node $NODE_VERSION found but not via fnm ($NODE_PATH)"
@@ -229,11 +232,12 @@ else
     warn "Show all file extensions disabled"
 fi
 
-# Check if key repeat is enabled (ApplePressAndHoldEnabled = false)
-if [ "$(defaults read NSGlobalDomain ApplePressAndHoldEnabled 2>/dev/null)" = "0" ]; then
-    pass "Key repeat enabled (press-and-hold disabled)"
-else
+# Check if key repeat is enabled (ApplePressAndHoldEnabled = false or not set)
+PRESS_HOLD=$(defaults read NSGlobalDomain ApplePressAndHoldEnabled 2>/dev/null)
+if [ "$PRESS_HOLD" = "1" ]; then
     warn "Press-and-hold enabled (key repeat disabled)"
+else
+    pass "Key repeat enabled"
 fi
 
 # Check if auto-correct is disabled
