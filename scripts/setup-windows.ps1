@@ -253,12 +253,29 @@ Remove-Item -Recurse -Force "$ReposRoot\dev\config" -ErrorAction SilentlyContinu
 Remove-Item -Recurse -Force "$ReposRoot\dev\dotfiles" -ErrorAction SilentlyContinue
 # END TEMPORARY
 
-# Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
+# Set up SSH for 1Password agent (needed before clone)
 $sshDir = "$env:USERPROFILE\.ssh"
-$knownHosts = "$sshDir\known_hosts"
+$sshConfig = "$sshDir\config"
 if (-not (Test-Path $sshDir)) {
     New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
 }
+if (-not (Test-Path $sshConfig)) {
+    Write-Host "    Creating SSH config for 1Password agent..."
+    @"
+# Git services
+Host github.com
+  HostName github.com
+  User git
+
+# Default - 1Password SSH agent
+Host *
+  IdentityAgent "\\.\pipe\openssh-ssh-agent"
+"@ | Out-File -FilePath $sshConfig -Encoding utf8
+    Write-Success "SSH config created"
+}
+
+# Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
+$knownHosts = "$sshDir\known_hosts"
 if (-not (Test-Path $knownHosts) -or -not (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet)) {
     Write-Host "    Adding GitHub to known_hosts..."
     $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
