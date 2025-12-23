@@ -121,12 +121,15 @@ if ($buckets -notcontains "extras") {
 # =============================================================================
 Write-Step 2 $TotalSteps "1Password"
 
-$1pInstalled = winget list --id AgileBits.1Password 2>$null | Select-String "AgileBits"
-if ($1pInstalled -or (Test-Path "C:\Program Files\1Password\app\8\1Password.exe")) {
+if (Test-Path "C:\Program Files\1Password\app\8\1Password.exe") {
     Write-Success "1Password installed"
 } else {
-    Write-Host "    Installing 1Password..."
-    winget install --id AgileBits.1Password --accept-source-agreements --accept-package-agreements --silent
+    Write-Host "    Downloading 1Password..."
+    $1pInstaller = "$env:TEMP\1PasswordSetup-latest.exe"
+    Invoke-WebRequest -Uri "https://downloads.1password.com/win/1PasswordSetup-latest.exe" -OutFile $1pInstaller
+    Write-Host "    Installing 1Password (silent)..."
+    Start-Process -FilePath $1pInstaller -ArgumentList "--silent" -Wait
+    Remove-Item $1pInstaller -ErrorAction SilentlyContinue
     Write-Success "1Password installed"
 }
 
