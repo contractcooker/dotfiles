@@ -139,7 +139,8 @@ Write-Success "Found $($OptionalScoop.Count) optional scoop, $($OptionalWinget.C
 # =============================================================================
 Write-Step "Checking gum"
 
-if (Get-Command gum -ErrorAction SilentlyContinue) {
+# Scoop creates shim as 'gm' not 'gum'
+if ((Get-Command gum -ErrorAction SilentlyContinue) -or (Get-Command gm -ErrorAction SilentlyContinue)) {
     Write-Success "gum installed"
 } else {
     Write-Host "    Installing gum..."
@@ -233,14 +234,15 @@ if ($All) {
     # Refresh PATH to ensure gum is available (especially when run via iex)
     Refresh-Path
 
-    # Debug: verify gum is accessible
-    $gumPath = Get-Command gum -ErrorAction SilentlyContinue
-    if ($gumPath) {
-        Write-Host "    DEBUG: gum found at $($gumPath.Source)" -ForegroundColor DarkGray
+    # Determine gum command (scoop creates shim as 'gm' not 'gum')
+    $gumCmd = $null
+    if (Get-Command gum -ErrorAction SilentlyContinue) {
+        $gumCmd = "gum"
+    } elseif (Get-Command gm -ErrorAction SilentlyContinue) {
+        $gumCmd = "gm"
     } else {
-        Write-Host "    DEBUG: gum NOT in PATH" -ForegroundColor Red
-        Write-Host "    DEBUG: Scoop shims: $env:USERPROFILE\scoop\shims" -ForegroundColor DarkGray
-        Write-Host "    DEBUG: PATH contains shims: $($env:Path -like '*scoop*shims*')" -ForegroundColor DarkGray
+        Write-Host "    [SKIP] gum not available, skipping interactive selection" -ForegroundColor Yellow
+        return
     }
 
     # Interactive mode with gum
@@ -261,7 +263,7 @@ if ($All) {
     }
 
     if ($scoopOptions.Count -gt 0) {
-        $selected = $scoopOptions | Sort-Object | gum choose --no-limit --header "Scoop packages:"
+        $selected = $scoopOptions | Sort-Object | & $gumCmd choose --no-limit --header "Scoop packages:"
 
         if ($selected) {
             $selected | ForEach-Object {
@@ -289,7 +291,7 @@ if ($All) {
     }
 
     if ($wingetOptions.Count -gt 0) {
-        $selected = $wingetOptions | Sort-Object | gum choose --no-limit --header "Winget packages:"
+        $selected = $wingetOptions | Sort-Object | & $gumCmd choose --no-limit --header "Winget packages:"
 
         if ($selected) {
             $selected | ForEach-Object {
