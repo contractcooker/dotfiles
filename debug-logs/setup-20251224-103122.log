@@ -1,0 +1,183 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20251224103122
+Username: DESKTOP-TRHSE1M\husker
+RunAs User: DESKTOP-TRHSE1M\husker
+Configuration Name: 
+Machine: DESKTOP-TRHSE1M (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -File C:\Users\husker\repos\dev\dotfiles\scripts\setup-windows.ps1
+Process ID: 9976
+PSVersion: 5.1.26100.6584
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.6584
+BuildVersion: 10.0.26100.6584
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Logging to: C:\Users\husker\AppData\Local\Temp\dotfiles-setup-logs\setup-20251224-103122.log
+
+======================================
+  Windows Development Setup
+======================================
+
+==> [1/15] Scoop Package Manager
+    [OK] Scoop installed
+    Adding extras bucket...
+WARN  The 'extras' bucket already exists. To add this bucket again, first remove it by running 'scoop bucket rm extras'.
+
+==> [2/15] 1Password
+    [OK] 1Password installed
+    [OK] 1Password Edge extension configured
+
+==> [3/15] 1Password SSH Agent
+    [OK] Windows OpenSSH Agent disabled
+
+    ACTION REQUIRED:
+    Enable 1Password SSH Agent
+      1. Open 1Password
+      2. Settings > Developer
+      3. Enable 'Use the SSH Agent'
+
+
+==> [4/15] Core CLI Tools
+Installed apps:
+    Installing git...
+WARN  'git' (2.52.0) is already installed.
+Use 'scoop update git' to install a new version.
+Installed apps:
+    Installing gh...
+WARN  'gh' (2.83.2) is already installed.
+Use 'scoop update gh' to install a new version.
+Installed apps:
+    Installing jq...
+WARN  'jq' (1.8.1) is already installed.
+Use 'scoop update jq' to install a new version.
+Installed apps:
+    Installing gum...
+WARN  'gum' (0.13.0) is already installed.
+Use 'scoop update gum' to install a new version.
+Installed apps:
+    Installing fnm...
+WARN  'fnm' (1.38.1) is already installed.
+Use 'scoop update fnm' to install a new version.
+Installed apps:
+    Installing uv...
+WARN  'uv' (0.9.18) is already installed.
+Use 'scoop update uv' to install a new version.
+Installed apps:
+    Installing starship...
+WARN  'starship' (1.24.1) is already installed.
+Use 'scoop update starship' to install a new version.
+
+==> [5/15] GitHub Authentication
+    [OK] Authenticated as contractcooker
+
+==> [6/15] Clone Repositories
+
+    [OK] Git configured to use Windows OpenSSH
+    [OK] config repo exists
+    [OK] dotfiles repo exists
+
+==> [7/15] Link Dotfiles
+    [OK] Developer Mode already enabled
+    [OK] .gitconfig (already linked)
+    [OK] .zshrc (already linked)
+    [OK] .config\starship.toml (already linked)
+    [OK] .ssh\known_hosts (already linked)
+    [OK] Documents\PowerShell\Microsoft.PowerShell_profile.ps1 (already linked)
+
+==> [8/15] Node.js + Claude Code
+
+    [OK] Node.js LTS
+    [OK] Claude Code
+    [OK] Claude settings configured
+
+    Claude Code is now available!
+    Run 'claude' if you need help from here.
+
+==> [9/15] Git + SSH Configuration
+
+
+
+
+
+    [OK] Git configured
+      user.name: Thomas Barron
+      user.email: barron.tom@gmail.com
+    [OK] SSH config exists
+
+==> [10/15] Python (uv)
+    [OK] Python installed
+    [OK] pre-commit installed
+uv : Executable directory C:\Users\husker\.local\bin is already in PATH
+At C:\Users\husker\repos\dev\dotfiles\scripts\setup-windows.ps1:591 char:1
++ uv tool update-shell 2>$null
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Executable dire...already in PATH:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+==> [11/15] Clone All Repositories
+Repos Root: C:\Users\husker\repos
+
+  [skip] dev\config (exists)
+  [skip] dev\dotfiles (exists)
+  [skip] dev\homelab (exists)
+  [skip] dev\learning\unix-fundamentals (exists)
+  [skip] personal\game-collection-tracker (exists)
+  [skip] personal\gaming-consoles (exists)
+  [skip] personal\pokemon (exists)
+  [skip] personal\fitness (exists)
+  [skip] personal\jakob (exists)
+  [skip] personal\oscr-guide (exists)
+  [skip] everything (exists)
+  [skip] dev\local-llm-coding (exists)
+
+Cloned: 0 | Skipped: 12 | Parked: 36
+
+To activate a parked repo, edit repos.json and change status to 'active'
+
+==> [12/15] Optional Packages
+    [SKIP] Run install-packages.ps1 later
+
+==> [13/15] Dropbox
+    [OK] Dropbox installed
+
+    ACTION REQUIRED:
+    Configure Dropbox folder sync
+      1. Open Dropbox and sign in
+      2. For each folder (Documents, Desktop, Downloads):
+         a. Right-click folder in File Explorer sidebar
+         b. Properties > Location tab
+         c. Move to Dropbox folder
+
+    See docs/dropbox-sync.md for details
+
+
+==> [14/15] Windows Preferences
+    [SKIP] Run configure-windows.ps1 later
+
+==> [15/15] Graphics Driver
+    [OK] NVIDIA GPU: NVIDIA GeForce RTX 3080 Ti
+    Consider installing GeForce Experience for driver updates:
+      winget install Nvidia.GeForceExperience
+Installed apps:
+    For local LLMs: scoop install ollama
+
+======================================
+  Setup Complete!
+======================================
+
+Next steps:
+  1. Restart your terminal (for profile changes)
+  2. Test SSH: ssh -T git@github.com
+  3. Verify: .\verify-setup.ps1
+
+Your repos are at: C:\Users\husker\repos
+
+**********************
+Windows PowerShell transcript end
+End time: 20251224103129
+**********************
