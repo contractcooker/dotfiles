@@ -205,8 +205,12 @@ if ($sshAgent) {
     Write-Success "Windows OpenSSH Agent disabled"
 }
 
-# TESTING: Skip 1Password SSH prompt
-Write-Success "1Password SSH Agent (assuming configured)"
+Write-Action "Enable 1Password SSH Agent"
+Write-Host "      1. Open 1Password"
+Write-Host "      2. Settings > Developer"
+Write-Host "      3. Enable 'Use the SSH Agent'"
+Write-Host ""
+Read-Host "    Press Enter when done"
 
 # =============================================================================
 # 4. CORE CLI TOOLS
@@ -606,11 +610,31 @@ if (-not $SkipRepos) {
 # =============================================================================
 Write-Step 12 $TotalSteps "Optional Packages"
 
-# TESTING: Run packages without prompting
 if (-not $SkipPackages) {
     $installScript = "$ScriptDir\install-packages.ps1"
     if (Test-Path $installScript) {
-        & $installScript
+        if ($All) {
+            & $installScript -CoreOnly
+        } else {
+            # Check for gum (scoop shim is gm.exe)
+            $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or (Get-Command gum -ErrorAction SilentlyContinue)
+            if ($hasGum) {
+                $gmExe = "$env:USERPROFILE\scoop\shims\gm.exe"
+                $confirm = "Yes", "No" | & $gmExe choose --header "Install optional packages now?"
+                if ($confirm -eq "Yes") {
+                    & $installScript
+                } else {
+                    Write-Skip "Run install-packages.ps1 later"
+                }
+            } else {
+                $reply = Read-Host "    Install optional packages? [y/N]"
+                if ($reply -match "^[Yy]") {
+                    & $installScript
+                } else {
+                    Write-Skip "Run install-packages.ps1 later"
+                }
+            }
+        }
     }
 }
 
@@ -628,18 +652,46 @@ if ($dropboxInstalled -or (Test-Path "$env:LOCALAPPDATA\Dropbox")) {
     Write-Success "Dropbox installed"
 }
 
-# TESTING: Skip Dropbox prompt
-Write-Success "Dropbox (assuming configured)"
+Write-Action "Configure Dropbox folder sync"
+Write-Host "      1. Open Dropbox and sign in"
+Write-Host "      2. For each folder (Documents, Desktop, Downloads):"
+Write-Host "         a. Right-click folder in File Explorer sidebar"
+Write-Host "         b. Properties > Location tab"
+Write-Host "         c. Move to Dropbox folder"
+Write-Host ""
+Write-Host "    See docs/dropbox-sync.md for details" -ForegroundColor DarkGray
+Write-Host ""
+Read-Host "    Press Enter when done (or to skip)"
 
 # =============================================================================
 # 14. WINDOWS PREFERENCES
 # =============================================================================
 Write-Step 14 $TotalSteps "Windows Preferences"
 
-# TESTING: Run Windows preferences without prompting
 $configScript = "$ScriptDir\configure-windows.ps1"
 if (Test-Path $configScript) {
-    & $configScript -All
+    if ($All) {
+        & $configScript -All
+    } else {
+        # Check for gum (scoop shim is gm.exe)
+        $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or (Get-Command gum -ErrorAction SilentlyContinue)
+        if ($hasGum) {
+            $gmExe = "$env:USERPROFILE\scoop\shims\gm.exe"
+            $confirm = "Yes", "No" | & $gmExe choose --header "Configure Windows preferences?"
+            if ($confirm -eq "Yes") {
+                & $configScript
+            } else {
+                Write-Skip "Run configure-windows.ps1 later"
+            }
+        } else {
+            $reply = Read-Host "    Configure Windows preferences? [Y/n]"
+            if ($reply -notmatch "^[Nn]") {
+                & $configScript
+            } else {
+                Write-Skip "Run configure-windows.ps1 later"
+            }
+        }
+    }
 } else {
     Write-Skip "configure-windows.ps1 not found"
 }
