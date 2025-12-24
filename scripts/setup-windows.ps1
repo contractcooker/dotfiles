@@ -86,6 +86,11 @@ function Write-Action {
 
 function Refresh-Path {
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    # Explicitly add scoop shims if not present (handles edge cases with registry timing)
+    $scoopShims = "$env:USERPROFILE\scoop\shims"
+    if ((Test-Path $scoopShims) -and ($env:Path -notlike "*$scoopShims*")) {
+        $env:Path = "$scoopShims;$env:Path"
+    }
 }
 
 Write-Host ""

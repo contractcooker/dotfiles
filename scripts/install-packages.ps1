@@ -15,9 +15,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Refresh PATH from registry (picks up changes from scoop/winget installs)
+# Refresh PATH from registry and ensure scoop shims are included
 function Refresh-Path {
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    # Explicitly add scoop shims if not present (handles edge cases with registry timing)
+    $scoopShims = "$env:USERPROFILE\scoop\shims"
+    if ((Test-Path $scoopShims) -and ($env:Path -notlike "*$scoopShims*")) {
+        $env:Path = "$scoopShims;$env:Path"
+    }
 }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -227,6 +232,16 @@ if ($All) {
 } else {
     # Refresh PATH to ensure gum is available (especially when run via iex)
     Refresh-Path
+
+    # Debug: verify gum is accessible
+    $gumPath = Get-Command gum -ErrorAction SilentlyContinue
+    if ($gumPath) {
+        Write-Host "    DEBUG: gum found at $($gumPath.Source)" -ForegroundColor DarkGray
+    } else {
+        Write-Host "    DEBUG: gum NOT in PATH" -ForegroundColor Red
+        Write-Host "    DEBUG: Scoop shims: $env:USERPROFILE\scoop\shims" -ForegroundColor DarkGray
+        Write-Host "    DEBUG: PATH contains shims: $($env:Path -like '*scoop*shims*')" -ForegroundColor DarkGray
+    }
 
     # Interactive mode with gum
 
