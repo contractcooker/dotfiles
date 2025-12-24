@@ -639,7 +639,7 @@ Write-Step 14 $TotalSteps "Windows Preferences"
 # TESTING: Run Windows preferences without prompting
 $configScript = "$ScriptDir\configure-windows.ps1"
 if (Test-Path $configScript) {
-    & $configScript
+    & $configScript -All
 } else {
     Write-Skip "configure-windows.ps1 not found"
 }
