@@ -104,9 +104,16 @@ function Apply-DevSettings {
     }
 
     # Disable USB selective suspend (prevents USB disconnects)
-    powercfg -change -usbselectivesuspend-ac off 2>$null
-    powercfg -change -usbselectivesuspend-dc off 2>$null
-    Write-Setting "Disabled USB selective suspend"
+    # Use powercfg /SETACVALUEINDEX with USB settings GUID
+    # 2a737441-1930-4402-8d77-b2bebba308a3 = USB settings, 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 = selective suspend
+    try {
+        $activeScheme = (powercfg /GETACTIVESCHEME) -replace '.*GUID: ([a-f0-9-]+).*','$1'
+        powercfg /SETACVALUEINDEX $activeScheme 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0 2>$null
+        powercfg /SETDCVALUEINDEX $activeScheme 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0 2>$null
+        Write-Setting "Disabled USB selective suspend"
+    } catch {
+        Write-SettingWarn "Could not disable USB selective suspend"
+    }
 
     # -------------------------------------------------------------------------
     # Windows Search
