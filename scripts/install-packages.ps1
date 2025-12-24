@@ -15,6 +15,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Refresh PATH from registry (picks up changes from scoop/winget installs)
+function Refresh-Path {
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+}
+
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $DotfilesPath = Split-Path -Parent $ScriptDir
 $Winfile = Join-Path $DotfilesPath "Winfile"

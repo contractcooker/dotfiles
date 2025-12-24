@@ -30,10 +30,20 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$LogFile = "$env:TEMP\dotfiles-setup.log"
+$LogDir = "$env:TEMP\dotfiles-setup-logs"
+$LogFile = "$LogDir\setup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+# Create log directory and rotate old logs (keep last 10)
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+}
+Get-ChildItem -Path $LogDir -Filter "setup-*.log" |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -Skip 9 |
+    Remove-Item -Force
 
 # Start logging
-Start-Transcript -Path $LogFile -Append | Out-Null
+Start-Transcript -Path $LogFile | Out-Null
 Write-Host "Logging to: $LogFile" -ForegroundColor DarkGray
 
 trap {
