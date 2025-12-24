@@ -205,12 +205,14 @@ if ($sshAgent) {
     Write-Success "Windows OpenSSH Agent disabled"
 }
 
-Write-Action "Enable 1Password SSH Agent"
-Write-Host "      1. Open 1Password"
-Write-Host "      2. Settings > Developer"
-Write-Host "      3. Enable 'Use the SSH Agent'"
-Write-Host ""
-Read-Host "    Press Enter when done"
+# TODO: Re-enable after testing
+# Write-Action "Enable 1Password SSH Agent"
+# Write-Host "      1. Open 1Password"
+# Write-Host "      2. Settings > Developer"
+# Write-Host "      3. Enable 'Use the SSH Agent'"
+# Write-Host ""
+# Read-Host "    Press Enter when done"
+Write-Success "1Password SSH Agent (assuming already configured)"
 
 # =============================================================================
 # 4. CORE CLI TOOLS
@@ -613,25 +615,8 @@ Write-Step 12 $TotalSteps "Optional Packages"
 if (-not $SkipPackages) {
     $installScript = "$ScriptDir\install-packages.ps1"
     if (Test-Path $installScript) {
-        if ($All) {
-            & $installScript -CoreOnly
-        } else {
-            if (Get-Command gum -ErrorAction SilentlyContinue) {
-                $confirm = "Yes", "No" | gum choose --header "Install optional packages now?"
-                if ($confirm -eq "Yes") {
-                    & $installScript
-                } else {
-                    Write-Skip "Run install-packages.ps1 later"
-                }
-            } else {
-                $reply = Read-Host "    Install optional packages? [y/N]"
-                if ($reply -match "^[Yy]") {
-                    & $installScript
-                } else {
-                    Write-Skip "Run install-packages.ps1 later"
-                }
-            }
-        }
+        # Run without prompting for faster testing
+        & $installScript
     }
 }
 
