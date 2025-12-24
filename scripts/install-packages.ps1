@@ -234,12 +234,15 @@ if ($All) {
     # Refresh PATH to ensure gum is available (especially when run via iex)
     Refresh-Path
 
-    # Determine gum command (scoop creates shim as 'gm' not 'gum')
+    # Determine gum command (scoop creates shim as 'gm.exe' not 'gum')
+    # Must use full path because 'gm' is a PowerShell alias for Get-Member
     $gumCmd = $null
-    if (Get-Command gum -ErrorAction SilentlyContinue) {
-        $gumCmd = "gum"
-    } elseif (Get-Command gm -ErrorAction SilentlyContinue) {
-        $gumCmd = "gm"
+    $gumExe = "$env:USERPROFILE\scoop\shims\gum.exe"
+    $gmExe = "$env:USERPROFILE\scoop\shims\gm.exe"
+    if (Test-Path $gumExe) {
+        $gumCmd = $gumExe
+    } elseif (Test-Path $gmExe) {
+        $gumCmd = $gmExe
     } else {
         Write-Host "    [SKIP] gum not available, skipping interactive selection" -ForegroundColor Yellow
         return
