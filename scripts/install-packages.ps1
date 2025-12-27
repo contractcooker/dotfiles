@@ -1,25 +1,25 @@
 # Install Windows packages with profile-based selection
 #
-# Parses Winfile for packages. Core packages install automatically.
+# Parses Winfile for packages. Base packages install automatically.
 # Optional packages filtered by profile with hardware auto-detection.
 #
 # Profiles:
-#   Personal - Full setup: all categories available
-#   Work     - Work setup: dev, browser, communication, utility (skip gaming, personal)
-#   Server   - CLI only: core-cli packages only
+#   Personal - base, desktop, dev, gaming, personal, browser, communication, utility
+#   Work     - base, desktop, dev, browser, communication, utility
+#   Server   - base only (CLI tools)
 #
 # Usage:
 #   .\install-packages.ps1                    # Interactive profile selection
 #   .\install-packages.ps1 -Profile Personal  # Use specific profile
 #   .\install-packages.ps1 -All               # Install everything
-#   .\install-packages.ps1 -CoreOnly          # Only core packages
+#   .\install-packages.ps1 -BaseOnly          # Only base packages
 
 param(
     [ValidateSet("Personal", "Work", "Server")]
     [string]$Profile,
 
     [switch]$All,
-    [switch]$CoreOnly
+    [switch]$BaseOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -90,11 +90,11 @@ function Get-AsusModelName {
 # Profile Configuration
 # =============================================================================
 
-# Categories each profile can access (in addition to core)
+# Categories each profile can access (in addition to base)
 $ProfileCategories = @{
-    "Personal" = @("dev", "gaming", "browser", "communication", "personal", "utility")
-    "Work"     = @("dev", "browser", "communication", "utility")
-    "Server"   = @()  # Core-cli only
+    "Personal" = @("desktop", "dev", "gaming", "browser", "communication", "personal", "utility")
+    "Work"     = @("desktop", "dev", "browser", "communication", "utility")
+    "Server"   = @()  # Base only
 }
 
 # =============================================================================
@@ -197,10 +197,8 @@ if (-not (Test-Path $Winfile)) {
     exit 1
 }
 
-$CoreCliScoop = @()
-$CoreCliWinget = @()
-$CoreGuiScoop = @()
-$CoreGuiWinget = @()
+$BaseScoop = @()
+$BaseWinget = @()
 $OptionalScoop = @{}   # name -> "category|description"
 $OptionalWinget = @{}  # name -> "category|description"
 
@@ -216,10 +214,10 @@ Get-Content $Winfile | ForEach-Object {
         $tag = $Matches[2]
         $desc = $Matches[3]
 
-        switch ($tag) {
-            "core-cli" { $script:CoreCliScoop += $name }
-            "core-gui" { $script:CoreGuiScoop += $name }
-            default    { $script:OptionalScoop[$name] = "${tag}|${desc}" }
+        if ($tag -eq "base") {
+            $script:BaseScoop += $name
+        } else {
+            $script:OptionalScoop[$name] = "${tag}|${desc}"
         }
     }
 
@@ -228,18 +226,17 @@ Get-Content $Winfile | ForEach-Object {
         $tag = $Matches[2]
         $desc = $Matches[3]
 
-        switch ($tag) {
-            "core-cli" { $script:CoreCliWinget += $name }
-            "core-gui" { $script:CoreGuiWinget += $name }
-            default    { $script:OptionalWinget[$name] = "${tag}|${desc}" }
+        if ($tag -eq "base") {
+            $script:BaseWinget += $name
+        } else {
+            $script:OptionalWinget[$name] = "${tag}|${desc}"
         }
     }
 }
 
-$coreCliCount = $CoreCliScoop.Count + $CoreCliWinget.Count
-$coreGuiCount = $CoreGuiScoop.Count + $CoreGuiWinget.Count
+$baseCount = $BaseScoop.Count + $BaseWinget.Count
 $optionalCount = $OptionalScoop.Count + $OptionalWinget.Count
-Write-Success "Found $coreCliCount core-cli, $coreGuiCount core-gui, $optionalCount optional packages"
+Write-Success "Found $baseCount base, $optionalCount optional packages"
 
 # =============================================================================
 # Step 5: Install packages
@@ -298,46 +295,29 @@ function Get-InstalledWinget {
 }
 
 # -----------------------------------------------------------------------------
-# Core CLI packages (always installed)
+# Base packages (always installed)
 # -----------------------------------------------------------------------------
-Write-Step "Installing core CLI packages"
+Write-Step "Installing base packages"
 
-foreach ($pkg in $CoreCliScoop) {
+foreach ($pkg in $BaseScoop) {
     Install-ScoopPackage $pkg | Out-Null
 }
 
-foreach ($pkg in $CoreCliWinget) {
+foreach ($pkg in $BaseWinget) {
     Install-WingetPackage $pkg | Out-Null
 }
 
-# -----------------------------------------------------------------------------
-# Core GUI packages (skip for Server profile)
-# -----------------------------------------------------------------------------
-if ($Profile -ne "Server") {
-    Write-Step "Installing core GUI packages"
-
-    foreach ($pkg in $CoreGuiScoop) {
-        Install-ScoopPackage $pkg | Out-Null
-    }
-
-    foreach ($pkg in $CoreGuiWinget) {
-        Install-WingetPackage $pkg | Out-Null
-    }
-} else {
-    Write-Step "Skipping core GUI packages (Server profile)"
-}
-
-# Exit early if CoreOnly
-if ($CoreOnly) {
+# Exit early if BaseOnly
+if ($BaseOnly) {
     Write-Host ""
-    Write-Success "Core packages installed (-CoreOnly)"
+    Write-Success "Base packages installed (-BaseOnly)"
     exit 0
 }
 
 # Exit early for Server profile
 if ($Profile -eq "Server") {
     Write-Host ""
-    Write-Success "Server profile complete (core-cli only)"
+    Write-Success "Server profile complete (base only)"
     exit 0
 }
 

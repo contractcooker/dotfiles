@@ -3,24 +3,31 @@
 #
 # Optimized order:
 #   1. Homebrew           - foundation
-#   2. 1Password          - enables all auth
-#   3. 1Password SSH      - configure agent
-#   4. Core CLI tools     - git, gh, jq, gum, fnm
-#   5. GitHub CLI auth    - via SSH
-#   6. Clone repos        - config + dotfiles
-#   7. Link dotfiles      - shell/git config
-#   8. Node + Claude      - troubleshooting available!
-#   9. Git + SSH config   - from config repo
-#   10. Python/uv         - dev tools
-#   11. Clone all repos   - everything ready
-#   12. Optional packages - interactive
-#   13. Dropbox           - file sync
-#   14. macOS prefs       - cosmetic
+#   2. Profile selection  - determines package categories
+#   3. 1Password          - enables all auth
+#   4. 1Password SSH      - configure agent
+#   5. Core CLI tools     - git, gh, jq, gum, fnm
+#   6. GitHub CLI auth    - via SSH
+#   7. Clone repos        - config + dotfiles
+#   8. Link dotfiles      - shell/git config
+#   9. Node + Claude      - troubleshooting available!
+#   10. Git + SSH config  - from config repo
+#   11. Python/uv         - dev tools
+#   12. Clone all repos   - everything ready
+#   13. Optional packages - interactive
+#   14. Dropbox           - file sync (skipped for Server)
+#   15. macOS prefs       - cosmetic
+#
+# Profiles:
+#   Personal - base, desktop, dev, gaming, personal, browser, communication, utility
+#   Work     - base, desktop, dev, browser, communication, utility
+#   Server   - base only (CLI tools)
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-mac.sh | zsh
-#   ./setup-mac.sh
-#   ./setup-mac.sh --all    # Non-interactive
+#   ./setup-mac.sh                      # Interactive
+#   ./setup-mac.sh --profile personal   # Use specific profile
+#   ./setup-mac.sh --all                # Non-interactive, all packages
 
 set -e
 
@@ -31,7 +38,17 @@ SCRIPT_DIR="$DOTFILES_PATH/scripts"
 
 # Parse arguments
 INSTALL_ALL=false
-[[ "$1" == "--all" ]] && INSTALL_ALL=true
+PROFILE=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --all) INSTALL_ALL=true; shift ;;
+        --profile)
+            PROFILE="${2:u}"  # Uppercase
+            shift 2
+            ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
 
 echo ""
 echo "======================================"
@@ -42,7 +59,7 @@ echo "======================================"
 # 1. HOMEBREW
 # =============================================================================
 echo ""
-echo "==> [1/14] Homebrew"
+echo "==> [1/15] Homebrew"
 
 if command -v brew &> /dev/null; then
     echo "    ✓ Already installed"
@@ -59,10 +76,43 @@ elif [[ -f /usr/local/bin/brew ]]; then
 fi
 
 # =============================================================================
-# 2. 1PASSWORD
+# 2. PROFILE SELECTION
 # =============================================================================
 echo ""
-echo "==> [2/14] 1Password"
+echo "==> [2/15] Profile Selection"
+
+# Install gum if needed for interactive selection
+if ! command -v gum &> /dev/null; then
+    echo "    Installing gum for interactive menus..."
+    brew install gum
+fi
+
+if [[ -z "$PROFILE" ]]; then
+    if command -v gum &> /dev/null; then
+        SELECTED=$(printf "Personal - Full setup with personal apps, gaming optional\nWork - Work-focused, no gaming or personal apps\nServer - CLI only, base packages" | gum choose --header "Select machine profile:")
+        PROFILE="${SELECTED%% *}"
+        PROFILE="${PROFILE:u}"
+    else
+        echo "    Select profile:"
+        echo "      1. Personal - Full setup"
+        echo "      2. Work - Work-focused"
+        echo "      3. Server - CLI only"
+        read "choice?    Enter choice [1]: "
+        case $choice in
+            2) PROFILE="WORK" ;;
+            3) PROFILE="SERVER" ;;
+            *) PROFILE="PERSONAL" ;;
+        esac
+    fi
+fi
+
+echo "    ✓ Profile: $PROFILE"
+
+# =============================================================================
+# 3. 1PASSWORD
+# =============================================================================
+echo ""
+echo "==> [3/15] 1Password"
 
 if brew list --cask 1password &> /dev/null || [[ -d "/Applications/1Password.app" ]]; then
     echo "    ✓ Already installed"
@@ -80,10 +130,10 @@ else
 fi
 
 # =============================================================================
-# 3. 1PASSWORD SSH AGENT
+# 4. 1PASSWORD SSH AGENT
 # =============================================================================
 echo ""
-echo "==> [3/14] 1Password SSH Agent"
+echo "==> [4/15] 1Password SSH Agent"
 echo ""
 echo "    ┌─────────────────────────────────────────────┐"
 echo "    │  IMPORTANT: Enable SSH Agent now            │"
@@ -104,10 +154,10 @@ else
 fi
 
 # =============================================================================
-# 4. CORE CLI TOOLS
+# 5. CORE CLI TOOLS
 # =============================================================================
 echo ""
-echo "==> [4/14] Core CLI Tools"
+echo "==> [5/15] Core CLI Tools"
 
 CORE_TOOLS=(git gh jq gum fnm)
 for tool in "${CORE_TOOLS[@]}"; do
@@ -120,10 +170,10 @@ for tool in "${CORE_TOOLS[@]}"; do
 done
 
 # =============================================================================
-# 5. GITHUB CLI AUTH
+# 6. GITHUB CLI AUTH
 # =============================================================================
 echo ""
-echo "==> [5/14] GitHub Authentication"
+echo "==> [6/15] GitHub Authentication"
 
 if gh auth status &> /dev/null; then
     GH_USER=$(gh api user --jq '.login' 2>/dev/null || echo "unknown")
@@ -135,10 +185,10 @@ else
 fi
 
 # =============================================================================
-# 6. CLONE CONFIG + DOTFILES
+# 7. CLONE CONFIG + DOTFILES
 # =============================================================================
 echo ""
-echo "==> [6/14] Clone Repositories"
+echo "==> [7/15] Clone Repositories"
 
 mkdir -p "$REPOS_ROOT/dev"
 
@@ -159,10 +209,10 @@ else
 fi
 
 # =============================================================================
-# 7. LINK DOTFILES
+# 8. LINK DOTFILES
 # =============================================================================
 echo ""
-echo "==> [7/14] Link Dotfiles"
+echo "==> [8/15] Link Dotfiles"
 
 if [[ -f "$SCRIPT_DIR/link-dotfiles.sh" ]]; then
     "$SCRIPT_DIR/link-dotfiles.sh"
@@ -171,10 +221,10 @@ else
 fi
 
 # =============================================================================
-# 8. NODE + CLAUDE CODE
+# 9. NODE + CLAUDE CODE
 # =============================================================================
 echo ""
-echo "==> [8/14] Node.js + Claude Code"
+echo "==> [9/15] Node.js + Claude Code"
 
 # Initialize fnm for this session
 eval "$(fnm env --use-on-cd --shell zsh)"
@@ -221,10 +271,10 @@ echo "    │  Run 'claude' if you need help from here.   │"
 echo "    └─────────────────────────────────────────────┘"
 
 # =============================================================================
-# 9. GIT + SSH CONFIG
+# 10. GIT + SSH CONFIG
 # =============================================================================
 echo ""
-echo "==> [9/14] Git + SSH Configuration"
+echo "==> [10/15] Git + SSH Configuration"
 
 # Git identity from config repo
 if [[ -f "$CONFIG_PATH/identity.json" ]]; then
@@ -289,10 +339,10 @@ EOF
 fi
 
 # =============================================================================
-# 10. PYTHON / UV
+# 11. PYTHON / UV
 # =============================================================================
 echo ""
-echo "==> [10/14] Python (uv)"
+echo "==> [11/15] Python (uv)"
 
 if brew list uv &> /dev/null; then
     echo "    ✓ uv installed"
@@ -316,10 +366,10 @@ else
 fi
 
 # =============================================================================
-# 11. CLONE ALL REPOS
+# 12. CLONE ALL REPOS
 # =============================================================================
 echo ""
-echo "==> [11/14] Clone All Repositories"
+echo "==> [12/15] Clone All Repositories"
 
 if [[ -f "$SCRIPT_DIR/clone-repos.sh" ]]; then
     "$SCRIPT_DIR/clone-repos.sh"
@@ -328,24 +378,27 @@ else
 fi
 
 # =============================================================================
-# 12. OPTIONAL PACKAGES
+# 13. OPTIONAL PACKAGES
 # =============================================================================
 echo ""
-echo "==> [12/14] Optional Packages"
+echo "==> [13/15] Optional Packages"
+
+PROFILE_ARG=""
+[[ -n "$PROFILE" ]] && PROFILE_ARG="--profile ${PROFILE:l}"
 
 if [[ "$INSTALL_ALL" == true ]]; then
-    "$SCRIPT_DIR/install-packages.sh" --all
+    "$SCRIPT_DIR/install-packages.sh" $PROFILE_ARG --all
 else
     if command -v gum &> /dev/null; then
         if gum confirm "Install optional packages now?"; then
-            "$SCRIPT_DIR/install-packages.sh"
+            "$SCRIPT_DIR/install-packages.sh" $PROFILE_ARG
         else
             echo "    Skipped (run install-packages.sh later)"
         fi
     else
         read "REPLY?    Install optional packages? [y/N] "
         if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-            "$SCRIPT_DIR/install-packages.sh"
+            "$SCRIPT_DIR/install-packages.sh" $PROFILE_ARG
         else
             echo "    Skipped"
         fi
@@ -353,34 +406,38 @@ else
 fi
 
 # =============================================================================
-# 13. DROPBOX
+# 14. DROPBOX
 # =============================================================================
 echo ""
-echo "==> [13/14] Dropbox"
+echo "==> [14/15] Dropbox"
 
-if brew list --cask dropbox &> /dev/null || [[ -d "/Applications/Dropbox.app" ]]; then
-    echo "    ✓ Dropbox installed"
+if [[ "$PROFILE" == "SERVER" ]]; then
+    echo "    Skipped (Server profile)"
 else
-    echo "    Installing Dropbox..."
-    brew install --cask dropbox || echo "    ⚠ Install manually if needed"
-fi
+    if brew list --cask dropbox &> /dev/null || [[ -d "/Applications/Dropbox.app" ]]; then
+        echo "    ✓ Dropbox installed"
+    else
+        echo "    Installing Dropbox..."
+        brew install --cask dropbox || echo "    ⚠ Install manually if needed"
+    fi
 
-echo ""
-echo "    Configure Dropbox folder sync:"
-echo "      1. Open Dropbox and sign in"
-echo "      2. Menu bar → Settings → Backups"
-echo "      3. Enable Desktop, Documents, Downloads"
-echo ""
+    echo ""
+    echo "    Configure Dropbox folder sync:"
+    echo "      1. Open Dropbox and sign in"
+    echo "      2. Menu bar → Settings → Backups"
+    echo "      3. Enable Desktop, Documents, Downloads"
+    echo ""
 
-if command -v gum &> /dev/null; then
-    gum confirm "    Open Dropbox now?" && open -a Dropbox || true
+    if command -v gum &> /dev/null; then
+        gum confirm "    Open Dropbox now?" && open -a Dropbox || true
+    fi
 fi
 
 # =============================================================================
-# 14. MACOS PREFERENCES
+# 15. MACOS PREFERENCES
 # =============================================================================
 echo ""
-echo "==> [14/14] macOS Preferences"
+echo "==> [15/15] macOS Preferences"
 
 if [[ "$INSTALL_ALL" == true ]]; then
     "$SCRIPT_DIR/configure-macos.sh" --all

@@ -3,51 +3,48 @@
 # Format: scoop|winget "package" # [category] Description
 #
 # Categories:
-#   [core-cli]      - CLI tools, installed on ALL machines including servers
-#   [core-gui]      - GUI essentials, installed on desktops/laptops (not servers)
+#   [base]          - Essential everywhere (including servers)
+#   [desktop]       - Requires GUI environment (not for servers)
 #   [dev]           - Development tools
-#   [gaming]        - Gaming launchers
-#   [nvidia]        - NVIDIA GPU tools (prompted if NVIDIA detected)
-#   [asus]          - ASUS laptop tools (prompted if ASUS/ROG detected)
+#   [gaming]        - Games and gaming platforms
+#   [personal]      - Personal apps (not for work)
 #   [browser]       - Web browsers
-#   [communication] - Chat/video apps
-#   [personal]      - Personal apps
-#   [utility]       - General utilities
+#   [communication] - Chat and video apps
+#   [utility]       - System utilities
+#   [nvidia]        - NVIDIA GPU tools (prompted if detected)
+#   [asus]          - ASUS laptop tools (prompted if ROG detected)
 #
-# Profiles:
-#   Personal - core-cli, core-gui + all categories available
-#   Work     - core-cli, core-gui + dev, browser, communication, utility
-#   Server   - core-cli only (no GUI)
+# Profiles determine which categories are installed:
+#   Personal - base, desktop, dev, gaming, personal, browser, communication, utility
+#   Work     - base, desktop, dev, browser, communication, utility
+#   Server   - base only
 #
-# Hardware auto-detection:
-#   nvidia - prompted if NVIDIA GPU detected
-#   asus   - prompted if ASUS ROG laptop detected
+# Hardware auto-detection prompts for nvidia/asus if detected.
 #
 # Usage:
 #   ./scripts/install-packages.ps1                    # Interactive
 #   ./scripts/install-packages.ps1 -Profile Personal  # Specific profile
 #   ./scripts/install-packages.ps1 -All               # Install everything
-#   ./scripts/install-packages.ps1 -CoreOnly          # Core packages only
 
 # =============================================================================
-# Core CLI (installed on ALL machines)
+# Base (installed everywhere, including servers)
 # =============================================================================
 
-scoop "git"                       # [core-cli] Version control
-scoop "gh"                        # [core-cli] GitHub CLI
-scoop "jq"                        # [core-cli] JSON processor
-scoop "gum"                       # [core-cli] Terminal UI for scripts
-scoop "fnm"                       # [core-cli] Node.js version manager
-scoop "uv"                        # [core-cli] Python version/package manager
-scoop "starship"                  # [core-cli] Cross-shell prompt
+scoop "git"                       # [base] Version control
+scoop "gh"                        # [base] GitHub CLI
+scoop "jq"                        # [base] JSON processor
+scoop "gum"                       # [base] Terminal UI for scripts
+scoop "fnm"                       # [base] Node.js version manager
+scoop "uv"                        # [base] Python version/package manager
+scoop "starship"                  # [base] Cross-shell prompt
 
 # =============================================================================
-# Core GUI (desktops/laptops, not servers)
+# Desktop (requires GUI, not for servers)
 # =============================================================================
 
-winget "AgileBits.1Password"              # [core-gui] Password manager
-winget "Dropbox.Dropbox"                  # [core-gui] File sync
-winget "Microsoft.WindowsTerminal"        # [core-gui] Terminal emulator
+winget "AgileBits.1Password"              # [desktop] Password manager
+winget "Dropbox.Dropbox"                  # [desktop] File sync
+winget "Microsoft.WindowsTerminal"        # [desktop] Terminal emulator
 
 # =============================================================================
 # Development Tools
@@ -72,6 +69,14 @@ winget "GOG.Galaxy"                       # [gaming] GOG launcher
 winget "EpicGames.EpicGamesLauncher"      # [gaming] Epic Games launcher
 
 # =============================================================================
+# Personal (not for work machines)
+# =============================================================================
+
+winget "OpenWhisperSystems.Signal"        # [personal] Encrypted messaging
+winget "Spotify.Spotify"                  # [personal] Music streaming
+winget "Plex.PlexMediaServer"             # [personal] Media server
+
+# =============================================================================
 # Hardware-Specific (auto-detected, prompted)
 # =============================================================================
 
@@ -79,18 +84,22 @@ winget "Nvidia.GeForceExperience"         # [nvidia] NVIDIA drivers + overlay
 winget "seerge.g-helper"                  # [asus] ASUS laptop control (replaces Armoury Crate)
 
 # =============================================================================
-# Browser, Communication, Personal, Utility
+# Browser
 # =============================================================================
 
 winget "Google.Chrome"                    # [browser] Chrome browser
+
+# =============================================================================
+# Communication
+# =============================================================================
 
 winget "SlackTechnologies.Slack"          # [communication] Team chat
 winget "Discord.Discord"                  # [communication] Voice/text chat
 winget "Zoom.Zoom"                        # [communication] Video conferencing
 
-winget "OpenWhisperSystems.Signal"        # [personal] Encrypted messaging
-winget "Spotify.Spotify"                  # [personal] Music streaming
-winget "Plex.PlexMediaServer"             # [personal] Media server
+# =============================================================================
+# Utility
+# =============================================================================
 
 winget "AnyDeskSoftwareGmbH.AnyDesk"      # [utility] Remote desktop
 

@@ -666,7 +666,7 @@ if (-not $SkipPackages) {
     $installScript = "$ScriptDir\install-packages.ps1"
     if (Test-Path $installScript) {
         if ($All) {
-            & $installScript -Profile $Profile -CoreOnly
+            & $installScript -Profile $Profile -BaseOnly
         } else {
             # Check for gum
             $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or
