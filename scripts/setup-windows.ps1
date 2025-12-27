@@ -3,27 +3,31 @@
 #
 # Optimized order:
 #   1. Scoop              - package foundation
-#   2. 1Password          - enables all auth
-#   3. 1Password SSH      - configure agent
-#   4. Core CLI tools     - git, gh, jq, gum, fnm, uv, starship
-#   5. GitHub CLI auth    - via SSH
-#   6. Clone repos        - config + dotfiles
-#   7. Link dotfiles      - PowerShell profile
-#   8. Node + Claude      - troubleshooting available!
-#   9. Git + SSH config   - from config repo
-#   10. Python/uv         - dev tools
-#   11. Clone all repos   - everything ready
-#   12. Optional packages - interactive
-#   13. Dropbox           - file sync
-#   14. Windows prefs     - system config
-#   15. NVIDIA check      - for 3080 Ti
+#   2. Profile selection  - Personal/Work/Server
+#   3. 1Password          - enables all auth
+#   4. 1Password SSH      - configure agent
+#   5. Core CLI tools     - git, gh, jq, gum, fnm, uv, starship
+#   6. GitHub CLI auth    - via SSH
+#   7. Clone repos        - config + dotfiles
+#   8. Link dotfiles      - PowerShell profile
+#   9. Node + Claude      - troubleshooting available!
+#   10. Git + SSH config  - from config repo
+#   11. Python/uv         - dev tools
+#   12. Clone all repos   - everything ready
+#   13. Optional packages - profile-filtered, interactive
+#   14. Dropbox           - file sync (skip for Server)
+#   15. Windows prefs     - system config
+#   16. Hardware check    - NVIDIA, ASUS detection
 #
 # Usage:
 #   irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
 #   .\setup-windows.ps1
-#   .\setup-windows.ps1 -All    # Non-interactive
+#   .\setup-windows.ps1 -Profile Personal  # Specify profile
+#   .\setup-windows.ps1 -All               # Non-interactive
 
 param(
+    [ValidateSet("Personal", "Work", "Server")]
+    [string]$Profile,
     [switch]$All,
     [switch]$SkipPackages,
     [switch]$SkipRepos
@@ -98,7 +102,7 @@ Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "  Windows Development Setup" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
 
-$TotalSteps = 15
+$TotalSteps = 16
 
 # =============================================================================
 # 1. SCOOP
@@ -132,9 +136,57 @@ if ($buckets -notcontains "extras") {
 }
 
 # =============================================================================
-# 2. 1PASSWORD
+# 2. PROFILE SELECTION
 # =============================================================================
-Write-Step 2 $TotalSteps "1Password"
+Write-Step 2 $TotalSteps "Profile Selection"
+
+# Install gum early for profile selection (if not already installed)
+$gumCmd = $null
+$gumExe = "$env:USERPROFILE\scoop\shims\gum.exe"
+$gmExe = "$env:USERPROFILE\scoop\shims\gm.exe"
+if (-not (Test-Path $gumExe) -and -not (Test-Path $gmExe)) {
+    Write-Host "    Installing gum for interactive prompts..."
+    scoop install gum
+    Refresh-Path
+}
+if (Test-Path $gumExe) { $gumCmd = $gumExe }
+elseif (Test-Path $gmExe) { $gumCmd = $gmExe }
+
+if (-not $Profile) {
+    if ($gumCmd) {
+        $profileOptions = @(
+            "Personal - Full setup with personal apps, gaming optional"
+            "Work - Work-focused, no gaming or personal apps"
+            "Server - CLI only, core packages"
+        )
+        $selected = $profileOptions | & $gumCmd choose --header "Select machine profile:"
+        if ($selected) {
+            $Profile = $selected.Split(" ")[0]
+        } else {
+            $Profile = "Personal"
+        }
+    } else {
+        Write-Host "    Select profile:" -ForegroundColor Cyan
+        Write-Host "      1. Personal - Full setup"
+        Write-Host "      2. Work - Work-focused"
+        Write-Host "      3. Server - CLI only"
+        $choice = Read-Host "    Enter choice [1]"
+        switch ($choice) {
+            "2" { $Profile = "Work" }
+            "3" { $Profile = "Server" }
+            default { $Profile = "Personal" }
+        }
+    }
+}
+Write-Success "Profile: $Profile"
+
+# Store profile for later use
+$script:SelectedProfile = $Profile
+
+# =============================================================================
+# 3. 1PASSWORD
+# =============================================================================
+Write-Step 3 $TotalSteps "1Password"
 
 # Check common install locations and registry
 $1pPaths = @(
@@ -189,9 +241,9 @@ if (-not $1pInstalled) {
 }
 
 # =============================================================================
-# 3. 1PASSWORD SSH AGENT
+# 4. 1PASSWORD SSH AGENT
 # =============================================================================
-Write-Step 3 $TotalSteps "1Password SSH Agent"
+Write-Step 4 $TotalSteps "1Password SSH Agent"
 
 # Disable OpenSSH Agent (conflicts with 1Password SSH Agent)
 $sshAgent = Get-Service ssh-agent -ErrorAction SilentlyContinue
@@ -213,9 +265,9 @@ Write-Host ""
 Read-Host "    Press Enter when done"
 
 # =============================================================================
-# 4. CORE CLI TOOLS
+# 5. CORE CLI TOOLS
 # =============================================================================
-Write-Step 4 $TotalSteps "Core CLI Tools"
+Write-Step 5 $TotalSteps "Core CLI Tools"
 
 $coreTools = @("git", "gh", "jq", "gum", "fnm", "uv", "starship")
 
@@ -232,9 +284,9 @@ foreach ($tool in $coreTools) {
 Refresh-Path
 
 # =============================================================================
-# 5. GITHUB CLI AUTH
+# 6. GITHUB CLI AUTH
 # =============================================================================
-Write-Step 5 $TotalSteps "GitHub Authentication"
+Write-Step 6 $TotalSteps "GitHub Authentication"
 
 # Check auth status using gh auth token (more reliable than status)
 $ghToken = gh auth token -h github.com 2>$null
@@ -257,9 +309,9 @@ if ($ghToken) {
 # The key is likely already on GitHub from initial setup
 
 # =============================================================================
-# 6. CLONE CONFIG + DOTFILES
+# 7. CLONE CONFIG + DOTFILES
 # =============================================================================
-Write-Step 6 $TotalSteps "Clone Repositories"
+Write-Step 7 $TotalSteps "Clone Repositories"
 
 # Set up SSH for 1Password agent (needed before clone)
 $sshDir = "$env:USERPROFILE\.ssh"
@@ -356,9 +408,9 @@ if (Test-Path $DotfilesPath) {
 }
 
 # =============================================================================
-# 7. LINK DOTFILES
+# 8. LINK DOTFILES
 # =============================================================================
-Write-Step 7 $TotalSteps "Link Dotfiles"
+Write-Step 8 $TotalSteps "Link Dotfiles"
 
 # Enable Developer Mode (required for symlinks without elevation)
 $devModePath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
@@ -435,9 +487,9 @@ if (Test-Path $dotfilesHome) {
 }
 
 # =============================================================================
-# 8. NODE + CLAUDE CODE
+# 9. NODE + CLAUDE CODE
 # =============================================================================
-Write-Step 8 $TotalSteps "Node.js + Claude Code"
+Write-Step 9 $TotalSteps "Node.js + Claude Code"
 
 # Initialize fnm for this session
 fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
@@ -488,9 +540,9 @@ Write-Host "    Claude Code is now available!" -ForegroundColor Green
 Write-Host "    Run 'claude' if you need help from here." -ForegroundColor DarkGray
 
 # =============================================================================
-# 9. GIT + SSH CONFIG
+# 10. GIT + SSH CONFIG
 # =============================================================================
-Write-Step 9 $TotalSteps "Git + SSH Configuration"
+Write-Step 10 $TotalSteps "Git + SSH Configuration"
 
 # Git config from identity.json
 $identityPath = "$ConfigPath\identity.json"
@@ -560,9 +612,9 @@ Host *
 }
 
 # =============================================================================
-# 10. PYTHON / UV
+# 11. PYTHON / UV
 # =============================================================================
-Write-Step 10 $TotalSteps "Python (uv)"
+Write-Step 11 $TotalSteps "Python (uv)"
 
 # Install Python via uv
 $pythonInstalled = uv python list --only-installed 2>$null | Select-String "cpython"
@@ -592,9 +644,9 @@ uv tool update-shell 2>$null
 $ErrorActionPreference = "Stop"
 
 # =============================================================================
-# 11. CLONE ALL REPOS
+# 12. CLONE ALL REPOS
 # =============================================================================
-Write-Step 11 $TotalSteps "Clone All Repositories"
+Write-Step 12 $TotalSteps "Clone All Repositories"
 
 if (-not $SkipRepos) {
     $cloneScript = "$ScriptDir\clone-repos.ps1"
@@ -606,32 +658,38 @@ if (-not $SkipRepos) {
 }
 
 # =============================================================================
-# 12. OPTIONAL PACKAGES
+# 13. OPTIONAL PACKAGES
 # =============================================================================
-Write-Step 12 $TotalSteps "Optional Packages"
+Write-Step 13 $TotalSteps "Optional Packages"
 
 if (-not $SkipPackages) {
     $installScript = "$ScriptDir\install-packages.ps1"
     if (Test-Path $installScript) {
         if ($All) {
-            & $installScript -CoreOnly
+            & $installScript -Profile $Profile -CoreOnly
         } else {
-            # Check for gum (scoop shim is gm.exe)
-            $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or (Get-Command gum -ErrorAction SilentlyContinue)
+            # Check for gum
+            $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or
+                      (Test-Path "$env:USERPROFILE\scoop\shims\gum.exe") -or
+                      (Get-Command gum -ErrorAction SilentlyContinue)
             if ($hasGum) {
-                $gmExe = "$env:USERPROFILE\scoop\shims\gm.exe"
-                $confirm = "Yes", "No" | & $gmExe choose --header "Install optional packages now?"
-                if ($confirm -eq "Yes") {
-                    & $installScript
+                if (Test-Path "$env:USERPROFILE\scoop\shims\gum.exe") {
+                    $gumExe = "$env:USERPROFILE\scoop\shims\gum.exe"
                 } else {
-                    Write-Skip "Run install-packages.ps1 later"
+                    $gumExe = "$env:USERPROFILE\scoop\shims\gm.exe"
+                }
+                $confirm = "Yes", "No" | & $gumExe choose --header "Install optional packages now?"
+                if ($confirm -eq "Yes") {
+                    & $installScript -Profile $Profile
+                } else {
+                    Write-Skip "Run install-packages.ps1 -Profile $Profile later"
                 }
             } else {
                 $reply = Read-Host "    Install optional packages? [y/N]"
                 if ($reply -match "^[Yy]") {
-                    & $installScript
+                    & $installScript -Profile $Profile
                 } else {
-                    Write-Skip "Run install-packages.ps1 later"
+                    Write-Skip "Run install-packages.ps1 -Profile $Profile later"
                 }
             }
         }
@@ -639,34 +697,38 @@ if (-not $SkipPackages) {
 }
 
 # =============================================================================
-# 13. DROPBOX
+# 14. DROPBOX
 # =============================================================================
-Write-Step 13 $TotalSteps "Dropbox"
+Write-Step 14 $TotalSteps "Dropbox"
 
-$dropboxInstalled = winget list --id Dropbox.Dropbox 2>$null | Select-String "Dropbox"
-if ($dropboxInstalled -or (Test-Path "$env:LOCALAPPDATA\Dropbox")) {
-    Write-Success "Dropbox installed"
+if ($Profile -eq "Server") {
+    Write-Skip "Dropbox skipped (Server profile)"
 } else {
-    Write-Host "    Installing Dropbox..."
-    winget install --id Dropbox.Dropbox --accept-source-agreements --accept-package-agreements --silent
-    Write-Success "Dropbox installed"
+    $dropboxInstalled = winget list --id Dropbox.Dropbox 2>$null | Select-String "Dropbox"
+    if ($dropboxInstalled -or (Test-Path "$env:LOCALAPPDATA\Dropbox")) {
+        Write-Success "Dropbox installed"
+    } else {
+        Write-Host "    Installing Dropbox..."
+        winget install --id Dropbox.Dropbox --accept-source-agreements --accept-package-agreements --silent
+        Write-Success "Dropbox installed"
+    }
+
+    Write-Action "Configure Dropbox folder sync"
+    Write-Host "      1. Open Dropbox and sign in"
+    Write-Host "      2. For each folder (Documents, Desktop, Downloads):"
+    Write-Host "         a. Right-click folder in File Explorer sidebar"
+    Write-Host "         b. Properties > Location tab"
+    Write-Host "         c. Move to Dropbox folder"
+    Write-Host ""
+    Write-Host "    See docs/dropbox-sync.md for details" -ForegroundColor DarkGray
+    Write-Host ""
+    Read-Host "    Press Enter when done (or to skip)"
 }
 
-Write-Action "Configure Dropbox folder sync"
-Write-Host "      1. Open Dropbox and sign in"
-Write-Host "      2. For each folder (Documents, Desktop, Downloads):"
-Write-Host "         a. Right-click folder in File Explorer sidebar"
-Write-Host "         b. Properties > Location tab"
-Write-Host "         c. Move to Dropbox folder"
-Write-Host ""
-Write-Host "    See docs/dropbox-sync.md for details" -ForegroundColor DarkGray
-Write-Host ""
-Read-Host "    Press Enter when done (or to skip)"
-
 # =============================================================================
-# 14. WINDOWS PREFERENCES
+# 15. WINDOWS PREFERENCES
 # =============================================================================
-Write-Step 14 $TotalSteps "Windows Preferences"
+Write-Step 15 $TotalSteps "Windows Preferences"
 
 $configScript = "$ScriptDir\configure-windows.ps1"
 if (Test-Path $configScript) {
@@ -697,9 +759,9 @@ if (Test-Path $configScript) {
 }
 
 # =============================================================================
-# 15. NVIDIA CHECK (3080 Ti)
+# 16. GRAPHICS DRIVER CHECK
 # =============================================================================
-Write-Step 15 $TotalSteps "Graphics Driver"
+Write-Step 16 $TotalSteps "Graphics Driver"
 
 $nvidia = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -match "NVIDIA" }
 if ($nvidia) {

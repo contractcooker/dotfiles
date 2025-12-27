@@ -1,74 +1,108 @@
 # Winfile - Windows package manifest
 #
-# Format: scoop|winget "name" # [tag] Description
-#   [core]     = installed automatically
-#   [category] = optional, shown in interactive picker grouped by category
+# Format: scoop|winget "package" # [category] Description
+#
+# Categories:
+#   [core-cli]      - CLI tools, installed on ALL machines including servers
+#   [core-gui]      - GUI essentials, installed on desktops/laptops (not servers)
+#   [dev]           - Development tools
+#   [gaming]        - Gaming launchers
+#   [nvidia]        - NVIDIA GPU tools (prompted if NVIDIA detected)
+#   [asus]          - ASUS laptop tools (prompted if ASUS/ROG detected)
+#   [browser]       - Web browsers
+#   [communication] - Chat/video apps
+#   [personal]      - Personal apps
+#   [utility]       - General utilities
+#
+# Profiles:
+#   Personal - core-cli, core-gui + all categories available
+#   Work     - core-cli, core-gui + dev, browser, communication, utility
+#   Server   - core-cli only (no GUI)
+#
+# Hardware auto-detection:
+#   nvidia - prompted if NVIDIA GPU detected
+#   asus   - prompted if ASUS ROG laptop detected
 #
 # Usage:
-#   ./scripts/install-packages.ps1    # Interactive (parses this file)
-#   ./scripts/install-packages.ps1 --all   # Install everything
-#
-# Package managers:
-#   scoop  - CLI tools (no admin, cleaner uninstall)
-#   winget - GUI apps (better for desktop software)
+#   ./scripts/install-packages.ps1                    # Interactive
+#   ./scripts/install-packages.ps1 -Profile Personal  # Specific profile
+#   ./scripts/install-packages.ps1 -All               # Install everything
+#   ./scripts/install-packages.ps1 -CoreOnly          # Core packages only
 
 # =============================================================================
-# Scoop Packages (CLI Tools)
+# Core CLI (installed on ALL machines)
 # =============================================================================
 
-scoop "git"                       # [core] Version control
-scoop "gh"                        # [core] GitHub CLI
-scoop "jq"                        # [core] JSON processor
-scoop "gum"                       # [core] Terminal UI for scripts
-scoop "fnm"                       # [core] Node.js version manager
-scoop "uv"                        # [core] Python version/package manager
-scoop "starship"                  # [core] Cross-shell prompt
-
-scoop "gitleaks"                  # [security] Scan repos for secrets
-scoop "git-filter-repo"           # [security] Rewrite git history (remove secrets/files)
-scoop "ollama"                    # [ai] Run LLMs locally (uses CUDA)
-scoop "minicom"                   # [hardware] Serial port terminal
-scoop "adb"                       # [mobile] Android Debug Bridge
+scoop "git"                       # [core-cli] Version control
+scoop "gh"                        # [core-cli] GitHub CLI
+scoop "jq"                        # [core-cli] JSON processor
+scoop "gum"                       # [core-cli] Terminal UI for scripts
+scoop "fnm"                       # [core-cli] Node.js version manager
+scoop "uv"                        # [core-cli] Python version/package manager
+scoop "starship"                  # [core-cli] Cross-shell prompt
 
 # =============================================================================
-# Winget Packages (GUI Apps)
+# Core GUI (desktops/laptops, not servers)
 # =============================================================================
 
-winget "AgileBits.1Password"              # [core] Password manager
-winget "Dropbox.Dropbox"                  # [core] File sync
-winget "Microsoft.WindowsTerminal"        # [core] Terminal emulator
+winget "AgileBits.1Password"              # [core-gui] Password manager
+winget "Dropbox.Dropbox"                  # [core-gui] File sync
+winget "Microsoft.WindowsTerminal"        # [core-gui] Terminal emulator
+
+# =============================================================================
+# Development Tools
+# =============================================================================
+
+scoop "gitleaks"                  # [dev] Scan repos for secrets
+scoop "git-filter-repo"           # [dev] Rewrite git history (remove secrets/files)
+scoop "ollama"                    # [dev] Run LLMs locally (uses CUDA on NVIDIA GPUs)
+scoop "minicom"                   # [dev] Serial port terminal (hardware debugging)
+scoop "adb"                       # [dev] Android Debug Bridge
 
 winget "Microsoft.VisualStudioCode"       # [dev] Code editor
 winget "JetBrains.Toolbox"                # [dev] JetBrains IDE manager
 winget "ScooterSoftware.BeyondCompare5"   # [dev] File/folder comparison
 
-winget "Nvidia.GeForceExperience"         # [gaming] NVIDIA drivers + overlay
+# =============================================================================
+# Gaming
+# =============================================================================
+
 winget "Valve.Steam"                      # [gaming] Steam platform
 winget "GOG.Galaxy"                       # [gaming] GOG launcher
 winget "EpicGames.EpicGamesLauncher"      # [gaming] Epic Games launcher
 
-winget "Google.Chrome"                    # [browser] Chrome
-winget "AnyDeskSoftwareGmbH.AnyDesk"      # [utility] Remote desktop
+# =============================================================================
+# Hardware-Specific (auto-detected, prompted)
+# =============================================================================
+
+winget "Nvidia.GeForceExperience"         # [nvidia] NVIDIA drivers + overlay
+winget "seerge.g-helper"                  # [asus] ASUS laptop control (replaces Armoury Crate)
+
+# =============================================================================
+# Browser, Communication, Personal, Utility
+# =============================================================================
+
+winget "Google.Chrome"                    # [browser] Chrome browser
 
 winget "SlackTechnologies.Slack"          # [communication] Team chat
 winget "Discord.Discord"                  # [communication] Voice/text chat
-winget "OpenWhisperSystems.Signal"        # [communication] Encrypted messaging
 winget "Zoom.Zoom"                        # [communication] Video conferencing
 
-winget "Spotify.Spotify"                  # [media] Music streaming
-winget "Plex.PlexMediaServer"             # [media] Media server
+winget "OpenWhisperSystems.Signal"        # [personal] Encrypted messaging
+winget "Spotify.Spotify"                  # [personal] Music streaming
+winget "Plex.PlexMediaServer"             # [personal] Media server
+
+winget "AnyDeskSoftwareGmbH.AnyDesk"      # [utility] Remote desktop
 
 # =============================================================================
 # Notes
 # =============================================================================
 #
-# Packages NOT included (handle separately):
-#   - 1Password CLI (use: op CLI from 1Password app)
+# Packages NOT included (handled by setup script):
 #   - Node.js (use: fnm install --lts)
 #   - Python (use: uv python install)
 #   - Claude Code (use: npm install -g @anthropic-ai/claude-code)
 #
-# Gaming rig specific:
-#   - GeForce Experience for driver updates and game optimization
-#   - Xbox Game Bar kept enabled via winutil (not installed here)
-#   - Ollama uses CUDA automatically with 3080 Ti
+# Hardware auto-detection uses WMI queries:
+#   - NVIDIA: Get-CimInstance Win32_VideoController
+#   - ASUS: Get-CimInstance Win32_ComputerSystem
