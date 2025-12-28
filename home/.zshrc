@@ -81,6 +81,11 @@ mkcd() {
     mkdir -p "$1" && cd "$1"
 }
 
+# Search Gmail
+gmail() {
+    ~/repos/personal/gmail-search/venv/bin/python ~/repos/personal/gmail-search/search.py "$@"
+}
+
 # -----------------------------------------------------------------------------
 # Local overrides (not version controlled)
 # -----------------------------------------------------------------------------
