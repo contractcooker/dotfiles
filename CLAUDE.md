@@ -18,23 +18,63 @@ curl -fsSL https://raw.githubusercontent.com/contractcooker/dotfiles/main/script
 irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
 ```
 
+## Profiles
+
+Setup scripts prompt for a profile that determines which packages are installed:
+
+| Profile | Use Case | Categories |
+|---------|----------|------------|
+| **Personal** | Home machines | base, desktop, dev, gaming, personal, browser, communication, utility |
+| **Work** | Work machines | base, desktop, dev, browser, communication, utility |
+| **Server** | Headless/CLI only | base |
+
+### Package Categories
+
+| Category | Description | Examples |
+|----------|-------------|----------|
+| `base` | Essential CLI tools (installed everywhere) | git, gh, jq, gum, fnm, uv |
+| `desktop` | Requires GUI environment | 1Password, Dropbox, Terminal |
+| `dev` | Development tools | VS Code, JetBrains, gitleaks |
+| `gaming` | Games and platforms | Steam, GOG, Epic Games |
+| `personal` | Personal apps (not for work) | Signal, Spotify, Plex |
+| `browser` | Web browsers | Chrome, Orion |
+| `communication` | Chat and video | Slack, Discord, Zoom |
+| `utility` | System utilities | Rectangle, DaisyDisk |
+
+### Hardware Detection (Windows only)
+
+Windows scripts auto-detect hardware and prompt to install drivers:
+- **NVIDIA GPU**: GeForce Experience
+- **ASUS ROG laptop**: G-Helper (replaces Armoury Crate)
+
 ## Commands
 
 ### macOS
 ```bash
-~/repos/dev/dotfiles/scripts/setup-mac.sh          # Full setup (interactive)
-~/repos/dev/dotfiles/scripts/install-packages.sh   # Homebrew packages
-~/repos/dev/dotfiles/scripts/configure-dev.sh      # Git, SSH, Node, Python
-~/repos/dev/dotfiles/scripts/configure-macos.sh    # macOS preferences
-~/repos/dev/dotfiles/scripts/verify-setup.sh       # Verify environment
-~/repos/dev/dotfiles/scripts/clone-repos.sh        # Clone repos from manifest
-~/repos/dev/dotfiles/scripts/gh-create <name>      # Create new GitHub repo
+./scripts/setup-mac.sh                      # Interactive setup
+./scripts/setup-mac.sh --profile personal   # Use specific profile
+./scripts/setup-mac.sh --all                # Non-interactive, all packages
+
+./scripts/install-packages.sh               # Interactive package selection
+./scripts/install-packages.sh --profile work --all  # Install all work packages
+./scripts/install-packages.sh --base-only   # Only base packages
+
+./scripts/configure-macos.sh    # macOS preferences
+./scripts/verify-setup.sh       # Verify environment
+./scripts/clone-repos.sh        # Clone repos from manifest
+./scripts/gh-create <name>      # Create new GitHub repo
 ```
 
 ### Windows (PowerShell)
 ```powershell
-.\scripts\setup-windows.ps1       # Full setup (interactive)
-.\scripts\install-packages.ps1    # Scoop + winget packages
+.\scripts\setup-windows.ps1                 # Interactive setup
+.\scripts\setup-windows.ps1 -Profile Work   # Use specific profile
+.\scripts\setup-windows.ps1 -All            # Non-interactive, all packages
+
+.\scripts\install-packages.ps1              # Interactive package selection
+.\scripts\install-packages.ps1 -Profile Personal -All  # Install all personal packages
+.\scripts\install-packages.ps1 -BaseOnly    # Only base packages
+
 .\scripts\configure-windows.ps1   # Windows preferences
 .\scripts\verify-setup.ps1        # Verify environment
 .\scripts\clone-repos.ps1         # Clone repos from manifest
@@ -42,8 +82,8 @@ irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup
 
 ## Structure
 
-- `Brewfile` - macOS Homebrew package manifest
-- `Winfile` - Windows Scoop + winget package manifest
+- `Brewfile` - macOS package manifest (format: `brew/cask/mas "name" # [category] description`)
+- `Winfile` - Windows package manifest (format: `scoop/winget "name" # [category] description`)
 - `scripts/`
   - **macOS**:
     - `setup-mac.sh` - Main orchestrator
