@@ -426,27 +426,36 @@ github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+V
     $ProgressPreference = 'Continue'
 
     if ($knownHostsContent) {
-        Write-Host "    [DEBUG] knownHosts path: $knownHosts"
-        Write-Host "    [DEBUG] sshDir exists: $(Test-Path $sshDir)"
-        Write-Host "    [DEBUG] sshDir value: $sshDir"
+        $writeSuccess = $false
+
+        # Method 1: Try direct write
         try {
-            # Ensure directory exists right before write
-            if (-not (Test-Path $sshDir)) {
-                [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
-            }
-            # Use Out-File instead of .NET - proven to work on this machine
             $knownHostsContent | Out-File -FilePath $knownHosts -Encoding utf8 -Force -ErrorAction Stop
-            Write-Success "GitHub host keys added"
+            $writeSuccess = $true
         } catch {
-            Write-Host "    [DEBUG] Write error: $_" -ForegroundColor Yellow
-            # Last resort - try Set-Content
+            # Method 2: Try via temp file in TEMP directory, then copy
             try {
-                Set-Content -Path $knownHosts -Value $knownHostsContent -Force -ErrorAction Stop
-                Write-Success "GitHub host keys added (via Set-Content)"
+                $tempFile = "$env:TEMP\known_hosts_temp"
+                $knownHostsContent | Out-File -FilePath $tempFile -Encoding utf8 -Force -ErrorAction Stop
+                Copy-Item -Path $tempFile -Destination $knownHosts -Force -ErrorAction Stop
+                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                $writeSuccess = $true
             } catch {
-                Write-Host "    [DEBUG] Set-Content also failed: $_" -ForegroundColor Yellow
-                Write-Skip "Could not write known_hosts file - you may be prompted on first SSH"
+                # Method 3: Create empty file first with New-Item, then write
+                try {
+                    New-Item -Path $knownHosts -ItemType File -Force -ErrorAction Stop | Out-Null
+                    $knownHostsContent | Out-File -FilePath $knownHosts -Encoding utf8 -Force -ErrorAction Stop
+                    $writeSuccess = $true
+                } catch {
+                    Write-Host "    [DEBUG] All write methods failed" -ForegroundColor Yellow
+                }
             }
+        }
+
+        if ($writeSuccess) {
+            Write-Success "GitHub host keys added"
+        } else {
+            Write-Skip "Could not write known_hosts - you may be prompted on first SSH"
         }
     } else {
         Write-Skip "Could not add GitHub host keys - you may be prompted on first SSH"
