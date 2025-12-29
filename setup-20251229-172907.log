@@ -1,0 +1,122 @@
+**********************
+PowerShell transcript start
+Start time: 20251229172907
+Username: AMR\barrontx
+RunAs User: AMR\barrontx
+Configuration Name: 
+Machine: Fce-0-WVD10-48 (Microsoft Windows NT 10.0.22621.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll
+Process ID: 7192
+PSVersion: 7.5.4
+PSEdition: Core
+GitCommitId: 7.5.4
+OS: Microsoft Windows 10.0.22621
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Logging to: C:\Users\barrontx\AppData\Local\Temp\dotfiles-setup-logs\setup-20251229-172907.log
+
+======================================
+  Windows Development Setup
+======================================
+
+==> [1/16] Scoop Package Manager
+    [OK] Scoop installed
+    Adding extras bucket...
+WARN  The 'extras' bucket already exists. To add this bucket again, first remove it by running 'scoop bucket rm extras'.
+
+==> [2/16] Profile Selection
+    [OK] Profile: Personal
+
+==> [3/16] 1Password
+    [OK] 1Password installed
+PS>TerminatingError(New-Item): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Access to the registry key 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist' is denied."
+    [SKIP] 1Password Edge extension (no admin access - install manually from Edge Add-ons)
+
+==> [4/16] 1Password SSH Agent
+    [OK] Windows OpenSSH Agent disabled
+
+    ACTION REQUIRED:
+    Enable 1Password SSH Agent
+      1. Open 1Password
+      2. Settings > Developer
+      3. Enable 'Use the SSH Agent'
+
+
+
+==> [5/16] Core CLI Tools
+Installed apps:
+    Installing git...
+Updating Scoop...
+
+
+Updating Buckets...
+ * faecce145c52 xpipe: Update to version 20.0                            extras       2 hours ago
+ * 948a1c9766f8 roamresearch: Update to version 0.0.28                   extras       2 hours ago
+ * 0884ea7f6c4e netbird: Update to version 0.61.0                        extras       2 hours ago
+ * fbe1e601b528 kcc: Update to version 9.3.8                             extras       2 hours ago
+ * 46da3ed88fd2 infoqube: Update to version 128.3                        extras       2 hours ago
+ * 43547ebfdcc3 freelens: Update to version 1.8.0                        extras       2 hours ago
+ * 470b96a6cd9f dolphin: Update to version 25.12-6887                    extras       2 hours ago
+ * afd05a0e034c stellarium: Update to version 25.4                       extras       6 hours ago
+ * 84810bed22a5 lunatranslator: Update to version 10.15.3                extras       6 hours ago
+ * 17288f0aec37 frostwire: Update to version 7.0.2-build-329             extras       6 hours ago
+ * 263a787f30fa rclone-ui: Update to version 3.2.0                       extras       10 hours ago
+ * 541fdb1e7dd3 mrrss: Update to version 1.3.12                          extras       10 hours ago
+ * 2fa694dedb27 v2ray: Update to version 5.42.0                          main         2 hours ago
+ * cf56bae062d8 jdtls: Update to version 1.55.0-202512291727             main         2 hours ago
+ * de3184ea09c7 centrifugo: Update to version 6.6.0                      main         2 hours ago
+ * 1bf533672d5b buf: Update to version 1.62.0                            main         2 hours ago
+ * 612db1e8dae7 balena-cli: Update to version 23.2.13                    main         2 hours ago
+ * 2f1027f8341a aws: Update to version 2.32.25                           main         2 hours ago
+ * b499ddca4f9d typos: Update to version 1.40.1                          main         6 hours ago
+ * dabb678ff8da balena-cli: Update to version 23.2.12                    main         6 hours ago
+ * 212fa5601d74 vals: Update to version 0.43.0                           main         10 hours ago
+ * 51f162c44420 oxlint: Update to version 1.36.0                         main         10 hours ago
+Scoop was updated successfully!
+WARN  'git' (2.52.0) is already installed.
+Use 'scoop update git' to install a new version.
+Installed apps:
+    Installing gh...
+WARN  'gh' (2.83.2) is already installed.
+Use 'scoop update gh' to install a new version.
+Installed apps:
+    Installing jq...
+WARN  'jq' (1.8.1) is already installed.
+Use 'scoop update jq' to install a new version.
+Installed apps:
+    Installing gum...
+WARN  'gum' (0.13.0) is already installed.
+Use 'scoop update gum' to install a new version.
+Installed apps:
+    Installing fnm...
+WARN  'fnm' (1.38.1) is already installed.
+Use 'scoop update fnm' to install a new version.
+Installed apps:
+    Installing uv...
+WARN  'uv' (0.9.18) is already installed.
+Use 'scoop update uv' to install a new version.
+Installed apps:
+    Installing starship...
+WARN  'starship' (1.24.1) is already installed.
+Use 'scoop update starship' to install a new version.
+
+==> [6/16] GitHub Authentication
+    [OK] Authenticated as contractcooker
+
+==> [7/16] Clone Repositories
+
+    [OK] Git configured to use Windows OpenSSH
+PS>TerminatingError(Select-String): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: The file C:\Users\barrontx\.ssh\known_hosts cannot be read: Could not find a part of the path 'C:\Users\barrontx\.ssh\known_hosts'."
+
+ERROR: The file C:\Users\barrontx\.ssh\known_hosts cannot be read: Could not find a part of the path 'C:\Users\barrontx\.ssh\known_hosts'.
+Line: 368
+
+See full log: C:\Users\barrontx\AppData\Local\Temp\dotfiles-setup-logs\setup-20251229-172907.log
+**********************
+PowerShell transcript end
+End time: 20251229172917
+**********************
