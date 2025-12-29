@@ -65,7 +65,7 @@ trap {
     break
 }
 
-$ReposRoot = "C:\source\repos"
+$ReposRoot = "$env:USERPROFILE\source\repos"
 $ConfigPath = "$ReposRoot\dev\config"
 $DotfilesPath = "$ReposRoot\dev\dotfiles"
 $ScriptDir = "$DotfilesPath\scripts"

@@ -6,7 +6,7 @@
 #   .\clone-repos.ps1 -List              # Just list repos, don't clone
 
 param(
-    [string]$ReposRoot = "C:\source\repos",
+    [string]$ReposRoot = "$HOME\source\repos",
     [switch]$IncludeParked,
     [string]$Status = "",
     [switch]$List

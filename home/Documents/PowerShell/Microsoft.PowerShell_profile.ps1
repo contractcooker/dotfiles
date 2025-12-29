@@ -54,9 +54,9 @@ function mkcd {
 }
 
 # Quick access to repos
-function repos { Set-Location "C:\source\repos" }
-function dev { Set-Location "C:\source\repos\dev" }
-function dotfiles { Set-Location "C:\source\repos\dev\dotfiles" }
+function repos { Set-Location "$env:USERPROFILE\source\repos" }
+function dev { Set-Location "$env:USERPROFILE\source\repos\dev" }
+function dotfiles { Set-Location "$env:USERPROFILE\source\repos\dev\dotfiles" }
 
 # Chris Titus Tech Windows Utility
 function winutil { irm "https://christitus.com/win" | iex }

@@ -121,7 +121,7 @@ function Apply-DevSettings {
     Write-Host "    Search Indexing:" -ForegroundColor White
 
     # Exclude repos folder from indexing
-    $reposPath = "C:\source\repos"
+    $reposPath = "$env:USERPROFILE\source\repos"
     if (Test-Path $reposPath) {
         $indexerPath = "HKCU:\Software\Microsoft\Windows Search\CrawlScopeManager\Windows\SystemIndex\WorkingSet"
         if (-not (Test-Path $indexerPath)) {
