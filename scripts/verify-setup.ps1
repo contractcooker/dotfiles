@@ -3,7 +3,7 @@
 # Run this after setup-windows.ps1 to confirm everything is working,
 # or anytime to check the health of your development environment.
 
-$ReposRoot = "$env:USERPROFILE\repos"
+$ReposRoot = "C:\source\repos"
 $ConfigPath = "$ReposRoot\dev\config"
 $DotfilesPath = "$ReposRoot\dev\dotfiles"
 
