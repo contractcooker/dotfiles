@@ -331,13 +331,21 @@ Write-Step 7 $TotalSteps "Clone Repositories"
 $sshDir = "$env:USERPROFILE\.ssh"
 $sshConfig = "$sshDir\config"
 # Force create .ssh directory using .NET (more reliable on corporate machines)
-if (-not (Test-Path $sshDir)) {
+# Always attempt creation - don't trust Test-Path on corporate machines
+Write-Host "    SSH directory: $sshDir"
+try {
+    [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
+} catch {
     try {
-        [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
-        Write-Host "    Created .ssh directory"
+        New-Item -ItemType Directory -Path $sshDir -Force -ErrorAction Stop | Out-Null
     } catch {
-        New-Item -ItemType Directory -Path $sshDir -Force -ErrorAction SilentlyContinue | Out-Null
+        Write-Host "    [WARN] Could not create .ssh directory: $_" -ForegroundColor Yellow
     }
+}
+if (Test-Path $sshDir) {
+    Write-Success ".ssh directory ready"
+} else {
+    Write-Host "    [WARN] .ssh directory does not exist at $sshDir" -ForegroundColor Yellow
 }
 
 # Check if config needs to be created or fixed (backslashes don't work)
