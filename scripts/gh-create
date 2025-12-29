@@ -24,6 +24,14 @@ fi
 REPO_NAME="$1"
 DESCRIPTION="${2:-}"
 
+# Ensure .gitignore exists with sensible defaults
+if [ ! -f ".gitignore" ]; then
+    echo ".DS_Store" > .gitignore
+    git add .gitignore
+    git commit -m "Add .gitignore"
+    echo "Created default .gitignore"
+fi
+
 # Create repo and push
 if [ -n "$DESCRIPTION" ]; then
     gh repo create "$REPO_NAME" --private --source=. --remote=origin --push --description "$DESCRIPTION"
