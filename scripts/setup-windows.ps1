@@ -165,8 +165,13 @@ if (-not $SetupProfile) {
             "Server - CLI only, core packages"
         )
         $selected = $profileOptions | & $gumCmd choose --header "Select machine profile:"
-        if ($selected) {
-            $SetupProfile = $selected.Split(" ")[0]
+        # Parse profile from selection (match against known values to handle ANSI codes)
+        if ($selected -match "Personal") {
+            $SetupProfile = "Personal"
+        } elseif ($selected -match "Work") {
+            $SetupProfile = "Work"
+        } elseif ($selected -match "Server") {
+            $SetupProfile = "Server"
         } else {
             $SetupProfile = "Personal"
         }
@@ -213,22 +218,26 @@ if ($1pInstalled) {
     Write-Success "1Password installed"
 }
 
-# Force-install 1Password Edge extension via policy
-$edgeExtPath = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
-$1pExtId = "dppgmdbiimibapkepcbdbmkaabgiofem;https://edge.microsoft.com/extensionwebstorebase/v1/crx"
-if (-not (Test-Path $edgeExtPath)) {
-    New-Item -Path $edgeExtPath -Force | Out-Null
-}
-$existingExts = Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue
-$1pExtInstalled = $existingExts.PSObject.Properties.Value -contains $1pExtId
-if (-not $1pExtInstalled) {
-    $nextId = ((Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue).PSObject.Properties.Name |
-               Where-Object { $_ -match '^\d+$' } | Measure-Object -Maximum).Maximum + 1
-    if (-not $nextId) { $nextId = 1 }
-    New-ItemProperty -Path $edgeExtPath -Name $nextId -Value $1pExtId -PropertyType String -Force | Out-Null
-    Write-Success "1Password Edge extension will install on next Edge launch"
-} else {
-    Write-Success "1Password Edge extension configured"
+# Force-install 1Password Edge extension via policy (requires admin, skip on corporate machines)
+try {
+    $edgeExtPath = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
+    $1pExtId = "dppgmdbiimibapkepcbdbmkaabgiofem;https://edge.microsoft.com/extensionwebstorebase/v1/crx"
+    if (-not (Test-Path $edgeExtPath)) {
+        New-Item -Path $edgeExtPath -Force | Out-Null
+    }
+    $existingExts = Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue
+    $1pExtInstalled = $existingExts.PSObject.Properties.Value -contains $1pExtId
+    if (-not $1pExtInstalled) {
+        $nextId = ((Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue).PSObject.Properties.Name |
+                   Where-Object { $_ -match '^\d+$' } | Measure-Object -Maximum).Maximum + 1
+        if (-not $nextId) { $nextId = 1 }
+        New-ItemProperty -Path $edgeExtPath -Name $nextId -Value $1pExtId -PropertyType String -Force | Out-Null
+        Write-Success "1Password Edge extension will install on next Edge launch"
+    } else {
+        Write-Success "1Password Edge extension configured"
+    }
+} catch {
+    Write-Skip "1Password Edge extension (no admin access - install manually from Edge Add-ons)"
 }
 
 if (-not $1pInstalled) {
