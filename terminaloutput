@@ -1,0 +1,41 @@
+C:\Users\barrontx\source\repos> Get-Item "$env:USERPROFILE\.ssh" | Format-List *                     
+
+PSPath              : Microsoft.PowerShell.Core\FileSystem::C:\Users\barrontx\.ssh
+PSParentPath        : Microsoft.PowerShell.Core\FileSystem::C:\Users\barrontx
+PSChildName         : .ssh
+PSDrive             : C
+PSProvider          : Microsoft.PowerShell.Core\FileSystem
+PSIsContainer       : True
+Mode                : d----
+ModeWithoutHardLink : d----
+BaseName            : .ssh
+ResolvedTarget      : C:\Users\barrontx\.ssh
+Target              : 
+LinkType            : 
+Name                : .ssh
+Parent              : C:\Users\barrontx
+Root                : C:\
+Exists              : True
+FullName            : C:\Users\barrontx\.ssh
+Extension           : .ssh
+CreationTime        : 12/29/2025 6:27:53 AM
+CreationTimeUtc     : 12/29/2025 11:27:53 AM
+LastAccessTime      : 12/29/2025 5:48:32 PM
+LastAccessTimeUtc   : 12/29/2025 10:48:32 PM
+LastWriteTime       : 12/29/2025 6:48:56 AM
+LastWriteTimeUtc    : 12/29/2025 11:48:56 AM
+LinkTarget          : 
+UnixFileMode        : -1
+Attributes          : Directory
+
+C:\Users\barrontx\source\repos> "test" | Out-File "$env:USERPROFILE\.ssh\test.txt"                   
+C:\Users\barrontx\source\repos> Get-ChildItem "$env:USERPROFILE\.ssh\test.txt" -ErrorAction SilentlyC
+ontinue
+
+    Directory: C:\Users\barrontx\.ssh
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          12/29/2025  5:51 PM              6 test.txt
+
+C:\Users\barrontx\source\repos> 
