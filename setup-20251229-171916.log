@@ -1,0 +1,75 @@
+**********************
+PowerShell transcript start
+Start time: 20251229171916
+Username: AMR\barrontx
+RunAs User: AMR\barrontx
+Configuration Name: 
+Machine: Fce-0-WVD10-48 (Microsoft Windows NT 10.0.22621.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll
+Process ID: 22064
+PSVersion: 7.5.4
+PSEdition: Core
+GitCommitId: 7.5.4
+OS: Microsoft Windows 10.0.22621
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Logging to: C:\Users\barrontx\AppData\Local\Temp\dotfiles-setup-logs\setup-20251229-171916.log
+
+======================================
+  Windows Development Setup
+======================================
+
+==> [1/16] Scoop Package Manager
+    [OK] Scoop installed
+fatal: unknown error occurred while reading the configuration files
+fatal: unknown error occurred while reading the configuration files
+    Adding extras bucket...
+WARN  The 'extras' bucket already exists. To add this bucket again, first remove it by running 'scoop bucket rm extras'.
+
+==> [2/16] Profile Selection
+    [OK] Profile: Personal
+
+==> [3/16] 1Password
+    [OK] 1Password installed
+PS>TerminatingError(New-Item): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Access to the registry key 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist' is denied."
+    [SKIP] 1Password Edge extension (no admin access - install manually from Edge Add-ons)
+
+==> [4/16] 1Password SSH Agent
+    [OK] Windows OpenSSH Agent disabled
+
+    ACTION REQUIRED:
+    Enable 1Password SSH Agent
+      1. Open 1Password
+      2. Settings > Developer
+      3. Enable 'Use the SSH Agent'
+
+
+
+==> [5/16] Core CLI Tools
+Installed apps:
+    Installing git...
+Updating Scoop...
+
+
+
+
+PS>TerminatingError(Invoke-GitLog): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+>> TerminatingError(Sync-Scoop): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+>> TerminatingError(Sync-Scoop): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+>> TerminatingError(Sync-Scoop): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+>> TerminatingError(Sync-Scoop): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+>> TerminatingError(Sync-Scoop): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+>> TerminatingError(Sync-Scoop): "Cannot bind argument to parameter 'CommitHash' because it is an empty string."
+
+ERROR: Cannot bind argument to parameter 'CommitHash' because it is an empty string.
+Line: 397
+
+See full log: C:\Users\barrontx\AppData\Local\Temp\dotfiles-setup-logs\setup-20251229-171916.log
+**********************
+PowerShell transcript end
+End time: 20251229171922
+**********************
