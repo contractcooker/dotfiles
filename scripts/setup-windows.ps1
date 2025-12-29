@@ -378,21 +378,34 @@ if ((Test-Path $knownHosts) -and (Test-Path $sshDir)) {
 }
 if ($needsGithubKey) {
     Write-Host "    Adding GitHub to known_hosts..."
-    # Ensure .ssh directory exists
-    if (-not (Test-Path $sshDir)) {
-        New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+    # Ensure .ssh directory exists (force create even if Test-Path is unreliable)
+    try {
+        if (-not (Test-Path $sshDir)) {
+            New-Item -ItemType Directory -Path $sshDir -Force -ErrorAction Stop | Out-Null
+        }
+    } catch {
+        # Directory might already exist or need different creation method
+        [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
     }
+
     $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
     $ProgressPreference = 'SilentlyContinue'
     try {
-        Invoke-WebRequest -Uri $knownHostsUrl -OutFile $knownHosts
+        # Use .NET method for more reliable file writing
+        $response = Invoke-WebRequest -Uri $knownHostsUrl -ErrorAction Stop
+        [System.IO.File]::WriteAllText($knownHosts, $response.Content)
         $ProgressPreference = 'Continue'
         Write-Success "GitHub host keys added"
     } catch {
         $ProgressPreference = 'Continue'
         # Fallback to ssh-keyscan if download fails
-        ssh-keyscan -t ed25519 github.com 2>$null >> $knownHosts
-        Write-Success "GitHub host key added (via keyscan)"
+        try {
+            $keyscanOutput = ssh-keyscan -t ed25519 github.com 2>$null
+            [System.IO.File]::WriteAllText($knownHosts, $keyscanOutput)
+            Write-Success "GitHub host key added (via keyscan)"
+        } catch {
+            Write-Skip "Could not add GitHub host keys - you may be prompted on first SSH"
+        }
     }
 }
 
