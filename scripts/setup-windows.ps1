@@ -426,13 +426,27 @@ github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+V
     $ProgressPreference = 'Continue'
 
     if ($knownHostsContent) {
+        Write-Host "    [DEBUG] knownHosts path: $knownHosts"
+        Write-Host "    [DEBUG] sshDir exists: $(Test-Path $sshDir)"
+        Write-Host "    [DEBUG] sshDir value: $sshDir"
         try {
+            # Ensure directory exists right before write
+            if (-not (Test-Path $sshDir)) {
+                [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
+            }
             # Use Out-File instead of .NET - proven to work on this machine
             $knownHostsContent | Out-File -FilePath $knownHosts -Encoding utf8 -Force -ErrorAction Stop
             Write-Success "GitHub host keys added"
         } catch {
             Write-Host "    [DEBUG] Write error: $_" -ForegroundColor Yellow
-            Write-Skip "Could not write known_hosts file - you may be prompted on first SSH"
+            # Last resort - try Set-Content
+            try {
+                Set-Content -Path $knownHosts -Value $knownHostsContent -Force -ErrorAction Stop
+                Write-Success "GitHub host keys added (via Set-Content)"
+            } catch {
+                Write-Host "    [DEBUG] Set-Content also failed: $_" -ForegroundColor Yellow
+                Write-Skip "Could not write known_hosts file - you may be prompted on first SSH"
+            }
         }
     } else {
         Write-Skip "Could not add GitHub host keys - you may be prompted on first SSH"
