@@ -26,12 +26,17 @@
 #   .\setup-windows.ps1 -All                    # Non-interactive
 
 param(
-    [ValidateSet("Personal", "Work", "Server")]
     [string]$SetupProfile,
     [switch]$All,
     [switch]$SkipPackages,
     [switch]$SkipRepos
 )
+
+# Validate profile manually (ValidateSet doesn't work with iex)
+if ($SetupProfile -and $SetupProfile -notin @("Personal", "Work", "Server")) {
+    Write-Host "ERROR: Invalid profile '$SetupProfile'. Must be Personal, Work, or Server." -ForegroundColor Red
+    exit 1
+}
 
 $ErrorActionPreference = "Stop"
 $LogDir = "$env:TEMP\dotfiles-setup-logs"
