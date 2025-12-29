@@ -330,8 +330,14 @@ Write-Step 7 $TotalSteps "Clone Repositories"
 # Set up SSH for 1Password agent (needed before clone)
 $sshDir = "$env:USERPROFILE\.ssh"
 $sshConfig = "$sshDir\config"
+# Force create .ssh directory using .NET (more reliable on corporate machines)
 if (-not (Test-Path $sshDir)) {
-    New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+    try {
+        [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
+        Write-Host "    Created .ssh directory"
+    } catch {
+        New-Item -ItemType Directory -Path $sshDir -Force -ErrorAction SilentlyContinue | Out-Null
+    }
 }
 
 # Check if config needs to be created or fixed (backslashes don't work)
@@ -388,24 +394,38 @@ if ($needsGithubKey) {
         [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
     }
 
-    $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
     $ProgressPreference = 'SilentlyContinue'
+    $knownHostsContent = $null
+
+    # Try API URL first (bypasses CDN cache)
     try {
-        # Use .NET method for more reliable file writing
-        $response = Invoke-WebRequest -Uri $knownHostsUrl -ErrorAction Stop
-        [System.IO.File]::WriteAllText($knownHosts, $response.Content)
-        $ProgressPreference = 'Continue'
-        Write-Success "GitHub host keys added"
+        $response = Invoke-WebRequest -Uri "https://api.github.com/repos/contractcooker/dotfiles/contents/home/.ssh/known_hosts" -Headers @{Accept="application/vnd.github.v3.raw"} -ErrorAction Stop
+        $knownHostsContent = $response.Content
     } catch {
-        $ProgressPreference = 'Continue'
-        # Fallback to ssh-keyscan if download fails
+        # Fallback to raw URL
         try {
-            $keyscanOutput = ssh-keyscan -t ed25519 github.com 2>$null
-            [System.IO.File]::WriteAllText($knownHosts, $keyscanOutput)
-            Write-Success "GitHub host key added (via keyscan)"
+            $response = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts" -ErrorAction Stop
+            $knownHostsContent = $response.Content
         } catch {
-            Write-Skip "Could not add GitHub host keys - you may be prompted on first SSH"
+            # Fallback to hardcoded GitHub keys
+            $knownHostsContent = @"
+github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+"@
         }
+    }
+    $ProgressPreference = 'Continue'
+
+    if ($knownHostsContent) {
+        try {
+            [System.IO.File]::WriteAllText($knownHosts, $knownHostsContent)
+            Write-Success "GitHub host keys added"
+        } catch {
+            Write-Skip "Could not write known_hosts file - you may be prompted on first SSH"
+        }
+    } else {
+        Write-Skip "Could not add GitHub host keys - you may be prompted on first SSH"
     }
 }
 
