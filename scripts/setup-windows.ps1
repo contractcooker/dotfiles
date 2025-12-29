@@ -22,8 +22,8 @@
 # Usage:
 #   irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
 #   .\setup-windows.ps1
-#   .\setup-windows.ps1 -SetupProfile Personal  # Specify profile
-#   .\setup-windows.ps1 -All                    # Non-interactive
+#   .\setup-windows.ps1 -Profile Personal  # Specify profile
+#   .\setup-windows.ps1 -All               # Non-interactive
 
 param(
     [string]$SetupProfile,
@@ -165,13 +165,8 @@ if (-not $SetupProfile) {
             "Server - CLI only, core packages"
         )
         $selected = $profileOptions | & $gumCmd choose --header "Select machine profile:"
-        # Parse profile from selection (match against known values to handle ANSI codes)
-        if ($selected -match "Personal") {
-            $SetupProfile = "Personal"
-        } elseif ($selected -match "Work") {
-            $SetupProfile = "Work"
-        } elseif ($selected -match "Server") {
-            $SetupProfile = "Server"
+        if ($selected) {
+            $SetupProfile = $selected.Split(" ")[0]
         } else {
             $SetupProfile = "Personal"
         }
@@ -330,22 +325,8 @@ Write-Step 7 $TotalSteps "Clone Repositories"
 # Set up SSH for 1Password agent (needed before clone)
 $sshDir = "$env:USERPROFILE\.ssh"
 $sshConfig = "$sshDir\config"
-# Force create .ssh directory using .NET (more reliable on corporate machines)
-# Always attempt creation - don't trust Test-Path on corporate machines
-Write-Host "    SSH directory: $sshDir"
-try {
-    [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
-} catch {
-    try {
-        New-Item -ItemType Directory -Path $sshDir -Force -ErrorAction Stop | Out-Null
-    } catch {
-        Write-Host "    [WARN] Could not create .ssh directory: $_" -ForegroundColor Yellow
-    }
-}
-if (Test-Path $sshDir) {
-    Write-Success ".ssh directory ready"
-} else {
-    Write-Host "    [WARN] .ssh directory does not exist at $sshDir" -ForegroundColor Yellow
+if (-not (Test-Path $sshDir)) {
+    New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
 }
 
 # Check if config needs to be created or fixed (backslashes don't work)
@@ -380,85 +361,21 @@ Write-Success "Git configured to use Windows OpenSSH"
 # Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
 $knownHosts = "$sshDir\known_hosts"
 $needsGithubKey = $true
-if ((Test-Path $knownHosts) -and (Test-Path $sshDir)) {
-    try {
-        if (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet -ErrorAction Stop) {
-            $needsGithubKey = $false
-        }
-    } catch {
-        # File doesn't exist or can't be read - we need to add the key
-        $needsGithubKey = $true
-    }
+if (Test-Path $knownHosts) {
+    $hasGithub = Select-String -Path $knownHosts -Pattern "github\.com" -Quiet -ErrorAction SilentlyContinue
+    if ($hasGithub) { $needsGithubKey = $false }
 }
 if ($needsGithubKey) {
     Write-Host "    Adding GitHub to known_hosts..."
-    # Ensure .ssh directory exists (force create even if Test-Path is unreliable)
-    try {
-        if (-not (Test-Path $sshDir)) {
-            New-Item -ItemType Directory -Path $sshDir -Force -ErrorAction Stop | Out-Null
-        }
-    } catch {
-        # Directory might already exist or need different creation method
-        [System.IO.Directory]::CreateDirectory($sshDir) | Out-Null
-    }
-
+    $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
     $ProgressPreference = 'SilentlyContinue'
-    $knownHostsContent = $null
-
-    # Try API URL first (bypasses CDN cache)
     try {
-        $response = Invoke-WebRequest -Uri "https://api.github.com/repos/contractcooker/dotfiles/contents/home/.ssh/known_hosts" -Headers @{Accept="application/vnd.github.v3.raw"} -ErrorAction Stop
-        $knownHostsContent = $response.Content
+        Invoke-WebRequest -Uri $knownHostsUrl -OutFile $knownHosts -ErrorAction Stop
+        $ProgressPreference = 'Continue'
+        Write-Success "GitHub host keys added"
     } catch {
-        # Fallback to raw URL
-        try {
-            $response = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts" -ErrorAction Stop
-            $knownHostsContent = $response.Content
-        } catch {
-            # Fallback to hardcoded GitHub keys
-            $knownHostsContent = @"
-github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
-github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
-github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
-"@
-        }
-    }
-    $ProgressPreference = 'Continue'
-
-    if ($knownHostsContent) {
-        $writeSuccess = $false
-
-        # Method 1: Try direct write
-        try {
-            $knownHostsContent | Out-File -FilePath $knownHosts -Encoding utf8 -Force -ErrorAction Stop
-            $writeSuccess = $true
-        } catch {
-            # Method 2: Try via temp file in TEMP directory, then copy
-            try {
-                $tempFile = "$env:TEMP\known_hosts_temp"
-                $knownHostsContent | Out-File -FilePath $tempFile -Encoding utf8 -Force -ErrorAction Stop
-                Copy-Item -Path $tempFile -Destination $knownHosts -Force -ErrorAction Stop
-                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
-                $writeSuccess = $true
-            } catch {
-                # Method 3: Create empty file first with New-Item, then write
-                try {
-                    New-Item -Path $knownHosts -ItemType File -Force -ErrorAction Stop | Out-Null
-                    $knownHostsContent | Out-File -FilePath $knownHosts -Encoding utf8 -Force -ErrorAction Stop
-                    $writeSuccess = $true
-                } catch {
-                    Write-Host "    [DEBUG] All write methods failed" -ForegroundColor Yellow
-                }
-            }
-        }
-
-        if ($writeSuccess) {
-            Write-Success "GitHub host keys added"
-        } else {
-            Write-Skip "Could not write known_hosts - you may be prompted on first SSH"
-        }
-    } else {
-        Write-Skip "Could not add GitHub host keys - you may be prompted on first SSH"
+        $ProgressPreference = 'Continue'
+        Write-Host "    Note: You may be prompted to accept GitHub's host key (type 'yes')"
     }
 }
 
