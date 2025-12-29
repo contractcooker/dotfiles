@@ -366,13 +366,22 @@ Write-Success "Git configured to use Windows OpenSSH"
 # Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
 $knownHosts = "$sshDir\known_hosts"
 $needsGithubKey = $true
-if (Test-Path $knownHosts) {
-    if (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet) {
-        $needsGithubKey = $false
+if ((Test-Path $knownHosts) -and (Test-Path $sshDir)) {
+    try {
+        if (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet -ErrorAction Stop) {
+            $needsGithubKey = $false
+        }
+    } catch {
+        # File doesn't exist or can't be read - we need to add the key
+        $needsGithubKey = $true
     }
 }
 if ($needsGithubKey) {
     Write-Host "    Adding GitHub to known_hosts..."
+    # Ensure .ssh directory exists
+    if (-not (Test-Path $sshDir)) {
+        New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+    }
     $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
     $ProgressPreference = 'SilentlyContinue'
     try {
