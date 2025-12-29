@@ -715,8 +715,8 @@ if (-not $SkipPackages) {
 # =============================================================================
 Write-Step 14 $TotalSteps "Dropbox"
 
-if ($SetupProfile -in @("Server", "Work")) {
-    Write-Skip "Dropbox skipped ($SetupProfile profile)"
+if ($SetupProfile -eq "Server") {
+    Write-Skip "Dropbox skipped (Server profile)"
 } else {
     $dropboxInstalled = winget list --id Dropbox.Dropbox 2>$null | Select-String "Dropbox"
     if ($dropboxInstalled -or (Test-Path "$env:LOCALAPPDATA\Dropbox")) {
