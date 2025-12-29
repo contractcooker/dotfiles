@@ -427,9 +427,11 @@ github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+V
 
     if ($knownHostsContent) {
         try {
-            [System.IO.File]::WriteAllText($knownHosts, $knownHostsContent)
+            # Use Out-File instead of .NET - proven to work on this machine
+            $knownHostsContent | Out-File -FilePath $knownHosts -Encoding utf8 -Force -ErrorAction Stop
             Write-Success "GitHub host keys added"
         } catch {
+            Write-Host "    [DEBUG] Write error: $_" -ForegroundColor Yellow
             Write-Skip "Could not write known_hosts file - you may be prompted on first SSH"
         }
     } else {
