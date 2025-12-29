@@ -22,12 +22,12 @@
 # Usage:
 #   irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
 #   .\setup-windows.ps1
-#   .\setup-windows.ps1 -Profile Personal  # Specify profile
-#   .\setup-windows.ps1 -All               # Non-interactive
+#   .\setup-windows.ps1 -SetupProfile Personal  # Specify profile
+#   .\setup-windows.ps1 -All                    # Non-interactive
 
 param(
     [ValidateSet("Personal", "Work", "Server")]
-    [string]$Profile,
+    [string]$SetupProfile,
     [switch]$All,
     [switch]$SkipPackages,
     [switch]$SkipRepos
@@ -152,7 +152,7 @@ if (-not (Test-Path $gumExe) -and -not (Test-Path $gmExe)) {
 if (Test-Path $gumExe) { $gumCmd = $gumExe }
 elseif (Test-Path $gmExe) { $gumCmd = $gmExe }
 
-if (-not $Profile) {
+if (-not $SetupProfile) {
     if ($gumCmd) {
         $profileOptions = @(
             "Personal - Full setup with personal apps, gaming optional"
@@ -161,9 +161,9 @@ if (-not $Profile) {
         )
         $selected = $profileOptions | & $gumCmd choose --header "Select machine profile:"
         if ($selected) {
-            $Profile = $selected.Split(" ")[0]
+            $SetupProfile = $selected.Split(" ")[0]
         } else {
-            $Profile = "Personal"
+            $SetupProfile = "Personal"
         }
     } else {
         Write-Host "    Select profile:" -ForegroundColor Cyan
@@ -172,16 +172,16 @@ if (-not $Profile) {
         Write-Host "      3. Server - CLI only"
         $choice = Read-Host "    Enter choice [1]"
         switch ($choice) {
-            "2" { $Profile = "Work" }
-            "3" { $Profile = "Server" }
-            default { $Profile = "Personal" }
+            "2" { $SetupProfile = "Work" }
+            "3" { $SetupProfile = "Server" }
+            default { $SetupProfile = "Personal" }
         }
     }
 }
-Write-Success "Profile: $Profile"
+Write-Success "Profile: $SetupProfile"
 
 # Store profile for later use
-$script:SelectedProfile = $Profile
+$script:SelectedProfile = $SetupProfile
 
 # =============================================================================
 # 3. 1PASSWORD
@@ -666,7 +666,7 @@ if (-not $SkipPackages) {
     $installScript = "$ScriptDir\install-packages.ps1"
     if (Test-Path $installScript) {
         if ($All) {
-            & $installScript -Profile $Profile -BaseOnly
+            & $installScript -Profile $SetupProfile -BaseOnly
         } else {
             # Check for gum
             $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or
@@ -680,16 +680,16 @@ if (-not $SkipPackages) {
                 }
                 $confirm = "Yes", "No" | & $gumExe choose --header "Install optional packages now?"
                 if ($confirm -eq "Yes") {
-                    & $installScript -Profile $Profile
+                    & $installScript -Profile $SetupProfile
                 } else {
-                    Write-Skip "Run install-packages.ps1 -Profile $Profile later"
+                    Write-Skip "Run install-packages.ps1 -Profile $SetupProfile later"
                 }
             } else {
                 $reply = Read-Host "    Install optional packages? [y/N]"
                 if ($reply -match "^[Yy]") {
-                    & $installScript -Profile $Profile
+                    & $installScript -Profile $SetupProfile
                 } else {
-                    Write-Skip "Run install-packages.ps1 -Profile $Profile later"
+                    Write-Skip "Run install-packages.ps1 -Profile $SetupProfile later"
                 }
             }
         }
@@ -701,7 +701,7 @@ if (-not $SkipPackages) {
 # =============================================================================
 Write-Step 14 $TotalSteps "Dropbox"
 
-if ($Profile -eq "Server") {
+if ($SetupProfile -eq "Server") {
     Write-Skip "Dropbox skipped (Server profile)"
 } else {
     $dropboxInstalled = winget list --id Dropbox.Dropbox 2>$null | Select-String "Dropbox"

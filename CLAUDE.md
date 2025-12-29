@@ -68,7 +68,7 @@ Windows scripts auto-detect hardware and prompt to install drivers:
 ### Windows (PowerShell)
 ```powershell
 .\scripts\setup-windows.ps1                 # Interactive setup
-.\scripts\setup-windows.ps1 -Profile Work   # Use specific profile
+.\scripts\setup-windows.ps1 -SetupProfile Work   # Use specific profile
 .\scripts\setup-windows.ps1 -All            # Non-interactive, all packages
 
 .\scripts\install-packages.ps1              # Interactive package selection
