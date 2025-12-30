@@ -31,13 +31,12 @@ irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup
 **Troubleshooting:** If repos fail to clone (SSH issues, corporate network):
 
 ```powershell
-# Use HTTPS instead of SSH (bypasses known_hosts issues)
-gh config set git_protocol https
+# Use direct HTTPS URLs (bypasses SSH entirely)
+gh auth setup-git
 cd $env:USERPROFILE\source\repos\dev
 rm -r config, dotfiles -ErrorAction SilentlyContinue
-gh repo clone config
-gh repo clone dotfiles
-gh config set git_protocol ssh
+git clone https://github.com/contractcooker/config.git
+git clone https://github.com/contractcooker/dotfiles.git
 ```
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
