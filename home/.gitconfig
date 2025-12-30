@@ -16,8 +16,6 @@
 	autocrlf = true
     editor = code --wait
     pager = less -FX
-
-	sshCommand = C:/Windows/System32/OpenSSH/ssh.exe
 [pull]
     rebase = false
 
