@@ -28,6 +28,12 @@ For non-interactive install (everything): `| zsh -s -- --all`
 irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} | iex
 ```
 
+**Troubleshooting:** If repos fail to clone (SSH issues, corporate network), run the bootstrap script first:
+
+```powershell
+irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/bootstrap-repos.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} | iex
+```
+
 See [Windows Setup](docs/windows-setup.md) for full guide.
 
 ## Contents
