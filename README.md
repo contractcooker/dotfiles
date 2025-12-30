@@ -28,10 +28,17 @@ For non-interactive install (everything): `| zsh -s -- --all`
 irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} | iex
 ```
 
-**Troubleshooting:** If repos fail to clone (SSH issues, corporate network), run the bootstrap script first:
+**Troubleshooting:** If repos fail to clone (SSH issues, corporate network):
 
 ```powershell
+# Option 1: Run bootstrap script (diagnostics + auto-fix)
 irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/bootstrap-repos.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} | iex
+
+# Option 2: Manual clone (if 1Password SSH prompt works)
+cd $env:USERPROFILE\source\repos\dev
+rm -r config, dotfiles -ErrorAction SilentlyContinue
+gh repo clone config
+gh repo clone dotfiles
 ```
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
