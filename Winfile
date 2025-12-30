@@ -101,6 +101,7 @@ winget "Zoom.Zoom"                        # [communication] Video conferencing
 # Utility
 # =============================================================================
 
+winget "Microsoft.PowerToys"              # [utility] Windows power-user tools (includes Awake)
 winget "AnyDeskSoftwareGmbH.AnyDesk"      # [utility] Remote desktop
 
 # =============================================================================
