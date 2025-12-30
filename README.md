@@ -31,17 +31,13 @@ irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup
 **Troubleshooting:** If repos fail to clone (SSH issues, corporate network):
 
 ```powershell
-# Step 1: Add GitHub SSH keys to known_hosts (run this first if prompted for host authenticity)
-mkdir -Force $env:USERPROFILE\.ssh; "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" | Out-File $env:USERPROFILE\.ssh\known_hosts -Encoding utf8
-
-# Step 2: Clone repos
+# Use HTTPS instead of SSH (bypasses known_hosts issues)
+gh config set git_protocol https
 cd $env:USERPROFILE\source\repos\dev
 rm -r config, dotfiles -ErrorAction SilentlyContinue
 gh repo clone config
 gh repo clone dotfiles
-
-# Alternative: Run bootstrap script for full diagnostics
-irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/bootstrap-repos.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} | iex
+gh config set git_protocol ssh
 ```
 
 See [Windows Setup](docs/windows-setup.md) for full guide.
