@@ -15,7 +15,7 @@
 #   11. Python/uv         - dev tools
 #   12. Clone all repos   - everything ready
 #   13. Optional packages - interactive
-#   14. Dropbox           - file sync (skipped for Server)
+#   14. Dropbox           - file sync (Personal only)
 #   15. macOS prefs       - cosmetic
 #
 # Profiles:
@@ -411,8 +411,8 @@ fi
 echo ""
 echo "==> [14/15] Dropbox"
 
-if [[ "$PROFILE" == "SERVER" ]]; then
-    echo "    Skipped (Server profile)"
+if [[ "$PROFILE" == "SERVER" || "$PROFILE" == "WORK" ]]; then
+    echo "    Skipped ($PROFILE profile)"
 else
     if brew list --cask dropbox &> /dev/null || [[ -d "/Applications/Dropbox.app" ]]; then
         echo "    ✓ Dropbox installed"

@@ -15,7 +15,7 @@
 #   11. Python/uv         - dev tools
 #   12. Clone all repos   - everything ready
 #   13. Optional packages - profile-filtered, interactive
-#   14. Dropbox           - file sync (skip for Server)
+#   14. Dropbox           - file sync (Personal only)
 #   15. Windows prefs     - system config
 #   16. Hardware check    - NVIDIA, ASUS detection
 #
@@ -178,18 +178,24 @@ if (-not $SetupProfile) {
         if ($selected -match "^(\w+)") {
             $SetupProfile = $Matches[1]
         } else {
-            $SetupProfile = "Personal"
+            Write-Host "    ERROR: Could not parse gum selection, falling back to manual prompt" -ForegroundColor Red
         }
-    } else {
+    }
+
+    # Manual prompt if gum unavailable or failed
+    while (-not $SetupProfile) {
+        Write-Host ""
         Write-Host "    Select profile:" -ForegroundColor Cyan
-        Write-Host "      1. Personal - Full setup"
-        Write-Host "      2. Work - Work-focused"
-        Write-Host "      3. Server - CLI only"
-        $choice = Read-Host "    Enter choice [1]"
+        Write-Host "      1. Personal - Full setup with personal apps, gaming optional"
+        Write-Host "      2. Work - Work-focused, no gaming or personal apps"
+        Write-Host "      3. Server - CLI only, core packages"
+        Write-Host ""
+        $choice = Read-Host "    Enter choice (1, 2, or 3)"
         switch ($choice) {
+            "1" { $SetupProfile = "Personal" }
             "2" { $SetupProfile = "Work" }
             "3" { $SetupProfile = "Server" }
-            default { $SetupProfile = "Personal" }
+            default { Write-Host "    Invalid choice. Please enter 1, 2, or 3." -ForegroundColor Yellow }
         }
     }
 }
@@ -726,8 +732,8 @@ if (-not $SkipPackages) {
 # =============================================================================
 Write-Step 14 $TotalSteps "Dropbox"
 
-if ($SetupProfile -eq "Server") {
-    Write-Skip "Dropbox skipped (Server profile)"
+if ($SetupProfile -in @("Server", "Work")) {
+    Write-Skip "Dropbox skipped ($SetupProfile profile)"
 } else {
     $dropboxInstalled = winget list --id Dropbox.Dropbox 2>$null | Select-String "Dropbox"
     if ($dropboxInstalled -or (Test-Path "$env:LOCALAPPDATA\Dropbox")) {
