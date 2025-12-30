@@ -1,0 +1,177 @@
+**********************
+PowerShell transcript start
+Start time: 20251230065101
+Username: AMR\barrontx
+RunAs User: AMR\barrontx
+Configuration Name: 
+Machine: Fce-0-WVD10-48 (Microsoft Windows NT 10.0.22621.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll
+Process ID: 15848
+PSVersion: 7.5.4
+PSEdition: Core
+GitCommitId: 7.5.4
+OS: Microsoft Windows 10.0.22621
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Logging to: C:\Users\barrontx\AppData\Local\Temp\dotfiles-setup-logs\setup-20251230-065101.log
+
+======================================
+  Windows Development Setup
+======================================
+
+==> [1/16] Scoop Package Manager
+    [OK] Scoop installed
+    Adding extras bucket...
+WARN  The 'extras' bucket already exists. To add this bucket again, first remove it by running 'scoop bucket rm extras'.
+
+==> [2/16] Profile Selection
+    [OK] Profile: Did
+
+==> [3/16] 1Password
+    [OK] 1Password installed
+    [OK] 1Password Edge extension will install on next Edge launch
+
+==> [4/16] 1Password SSH Agent
+    [OK] Windows OpenSSH Agent disabled
+
+    ACTION REQUIRED:
+    Enable 1Password SSH Agent
+      1. Open 1Password
+      2. Settings > Developer
+      3. Enable 'Use the SSH Agent'
+
+
+
+==> [5/16] Core CLI Tools
+Installed apps:
+    Installing git...
+Updating Scoop...
+
+
+Updating Buckets...
+ * d24db5ee0b15 swc: Update to version 1.15.8                            main         3 hours ago
+ * 1fb4e3500902 oh-my-posh: Update to version 28.8.0                     main         3 hours ago
+ * fbcbc0b0c94e pulumi: Update to version 3.214.0                        main         7 hours ago
+ * e3d4b5d23e4e uv: Update to version 0.9.20                             main         11 hours ago
+ * 3dce963f46ce buf: Update to version 1.62.1                            main         11 hours ago
+ * 697b65d90787 metasploit-framework: Update to version 6.4.105-202512.. extras       3 hours ago
+ * 7082622f9e03 jackett: Update to version 0.24.622                      extras       3 hours ago
+ * 3f071c632254 megasync@6.0.0.3: Fix hash (Closes #16904)               extras       6 hours ago
+ * acc253fc2e47 ccextractor: Update to version 0.96.3, fix autoupdate .. extras       6 hours ago
+ * ce983642039c throne: Update to version 1.0.13                         extras       7 hours ago
+ * faff93a607a6 okular: Update to version 25.12-7063                     extras       7 hours ago
+ * b61b3a36437f mpc-be: Update to version 1.8.9                          extras       7 hours ago
+ * f54bb5d299a0 fsresizer: Update to version 4.5                         extras       7 hours ago
+ * 2c55d227e2ae binance: Update to version 2.2.1                         extras       7 hours ago
+ * 99319fc9f5be xpipe: Update to version 20.0.1                          extras       11 hours ago
+ * f628159852f3 praat: Update to version 6.4.50                          extras       11 hours ago
+ * fab0a46b83af opencode: Update to version 1.0.209                      extras       11 hours ago
+ * 07297dc06ea7 mpv-git: Update to version 20251230                      extras       11 hours ago
+ * 42f80d6e278f kate: Update to version 25.12-10839                      extras       11 hours ago
+ * 80b91b9dbc42 kasts: Update to version 25.12-4073                      extras       11 hours ago
+Scoop was updated successfully!
+WARN  'git' (2.52.0) is already installed.
+Use 'scoop update git' to install a new version.
+Installed apps:
+    Installing gh...
+WARN  'gh' (2.83.2) is already installed.
+Use 'scoop update gh' to install a new version.
+Installed apps:
+    Installing jq...
+WARN  'jq' (1.8.1) is already installed.
+Use 'scoop update jq' to install a new version.
+Installed apps:
+    Installing gum...
+WARN  'gum' (0.13.0) is already installed.
+Use 'scoop update gum' to install a new version.
+Installed apps:
+    Installing fnm...
+WARN  'fnm' (1.38.1) is already installed.
+Use 'scoop update fnm' to install a new version.
+Installed apps:
+    Installing uv...
+WARN  'uv' (0.9.18) is already installed.
+Use 'scoop update uv' to install a new version.
+Installed apps:
+    Installing starship...
+WARN  'starship' (1.24.1) is already installed.
+Use 'scoop update starship' to install a new version.
+
+==> [6/16] GitHub Authentication
+    [OK] Authenticated as contractcooker
+
+==> [7/16] Clone Repositories
+
+    [OK] Git configured to use Windows OpenSSH
+    Adding GitHub to known_hosts...
+PS>TerminatingError(Out-File): "Could not find a part of the path 'C:\Users\barrontx\.ssh\known_hosts'."
+    [WARN] Could not write known_hosts: Could not find a part of the path 'C:\Users\barrontx\.ssh\known_hosts'.
+    You may be prompted to verify GitHub's host key on first connect
+    [OK] config repo exists
+    [OK] dotfiles repo exists
+
+==> [8/16] Link Dotfiles
+    [OK] Developer Mode already enabled
+    [SKIP] No dotfiles home directory found
+
+==> [9/16] Node.js + Claude Code
+    [OK] Node.js LTS
+    [OK] Claude Code
+
+    Claude Code is now available!
+    Run 'claude' if you need help from here.
+
+==> [10/16] Git + SSH Configuration
+    [SKIP] identity.json not found
+    [OK] SSH config exists
+
+==> [11/16] Python (uv)
+    [OK] Python installed
+    [OK] pre-commit installed
+Executable directory C:\Users\barrontx\.local\bin is already in PATH
+
+==> [12/16] Clone All Repositories
+    [SKIP] clone-repos.ps1 not found
+
+==> [13/16] Optional Packages
+
+==> [14/16] Dropbox
+    [OK] Dropbox installed
+
+    ACTION REQUIRED:
+    Configure Dropbox folder sync
+      1. Open Dropbox and sign in
+      2. For each folder (Documents, Desktop, Downloads):
+         a. Right-click folder in File Explorer sidebar
+         b. Properties > Location tab
+         c. Move to Dropbox folder
+
+    See docs/dropbox-sync.md for details
+
+
+
+==> [15/16] Windows Preferences
+    [SKIP] configure-windows.ps1 not found
+
+==> [16/16] Graphics Driver
+    [SKIP] No NVIDIA GPU detected
+
+======================================
+  Setup Complete!
+======================================
+
+Next steps:
+  1. Restart your terminal (for profile changes)
+  2. Test SSH: ssh -T git@github.com
+  3. Verify: .\verify-setup.ps1
+
+Your repos are at: C:\Users\barrontx\source\repos
+
+**********************
+PowerShell transcript end
+End time: 20251230065126
+**********************
