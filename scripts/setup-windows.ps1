@@ -22,16 +22,23 @@
 # Usage:
 #   irm https://raw.githubusercontent.com/contractcooker/dotfiles/main/scripts/setup-windows.ps1 | iex
 #   .\setup-windows.ps1
-#   .\setup-windows.ps1 -Profile Personal  # Specify profile
-#   .\setup-windows.ps1 -All               # Non-interactive
+#   .\setup-windows.ps1 -SetupProfile Work              # Specify profile
+#   .\setup-windows.ps1 -ReposPath "C:\source\repos"    # Custom repos location
+#   .\setup-windows.ps1 -All                            # Non-interactive
 
 param(
-    [ValidateSet("Personal", "Work", "Server")]
-    [string]$Profile,
+    [string]$SetupProfile,
+    [string]$ReposPath,
     [switch]$All,
     [switch]$SkipPackages,
     [switch]$SkipRepos
 )
+
+# Validate SetupProfile if provided
+if ($SetupProfile -and $SetupProfile -notin @("Personal", "Work", "Server")) {
+    Write-Host "ERROR: Invalid profile '$SetupProfile'. Must be Personal, Work, or Server." -ForegroundColor Red
+    exit 1
+}
 
 $ErrorActionPreference = "Stop"
 $LogDir = "$env:TEMP\dotfiles-setup-logs"
@@ -60,7 +67,15 @@ trap {
     break
 }
 
-$ReposRoot = "$env:USERPROFILE\repos"
+# Determine repos location (custom path, OneDrive-aware default, or standard)
+if ($ReposPath) {
+    $ReposRoot = $ReposPath
+} elseif (Test-Path "$env:USERPROFILE\OneDrive*") {
+    # OneDrive detected - use source\repos to avoid sync issues
+    $ReposRoot = "$env:USERPROFILE\source\repos"
+} else {
+    $ReposRoot = "$env:USERPROFILE\repos"
+}
 $ConfigPath = "$ReposRoot\dev\config"
 $DotfilesPath = "$ReposRoot\dev\dotfiles"
 $ScriptDir = "$DotfilesPath\scripts"
@@ -152,7 +167,7 @@ if (-not (Test-Path $gumExe) -and -not (Test-Path $gmExe)) {
 if (Test-Path $gumExe) { $gumCmd = $gumExe }
 elseif (Test-Path $gmExe) { $gumCmd = $gmExe }
 
-if (-not $Profile) {
+if (-not $SetupProfile) {
     if ($gumCmd) {
         $profileOptions = @(
             "Personal - Full setup with personal apps, gaming optional"
@@ -160,10 +175,10 @@ if (-not $Profile) {
             "Server - CLI only, core packages"
         )
         $selected = $profileOptions | & $gumCmd choose --header "Select machine profile:"
-        if ($selected) {
-            $Profile = $selected.Split(" ")[0]
+        if ($selected -match "^(\w+)") {
+            $SetupProfile = $Matches[1]
         } else {
-            $Profile = "Personal"
+            $SetupProfile = "Personal"
         }
     } else {
         Write-Host "    Select profile:" -ForegroundColor Cyan
@@ -172,16 +187,16 @@ if (-not $Profile) {
         Write-Host "      3. Server - CLI only"
         $choice = Read-Host "    Enter choice [1]"
         switch ($choice) {
-            "2" { $Profile = "Work" }
-            "3" { $Profile = "Server" }
-            default { $Profile = "Personal" }
+            "2" { $SetupProfile = "Work" }
+            "3" { $SetupProfile = "Server" }
+            default { $SetupProfile = "Personal" }
         }
     }
 }
-Write-Success "Profile: $Profile"
+Write-Success "Profile: $SetupProfile"
 
 # Store profile for later use
-$script:SelectedProfile = $Profile
+$script:SelectedProfile = $SetupProfile
 
 # =============================================================================
 # 3. 1PASSWORD
@@ -208,22 +223,26 @@ if ($1pInstalled) {
     Write-Success "1Password installed"
 }
 
-# Force-install 1Password Edge extension via policy
-$edgeExtPath = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
-$1pExtId = "dppgmdbiimibapkepcbdbmkaabgiofem;https://edge.microsoft.com/extensionwebstorebase/v1/crx"
-if (-not (Test-Path $edgeExtPath)) {
-    New-Item -Path $edgeExtPath -Force | Out-Null
-}
-$existingExts = Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue
-$1pExtInstalled = $existingExts.PSObject.Properties.Value -contains $1pExtId
-if (-not $1pExtInstalled) {
-    $nextId = ((Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue).PSObject.Properties.Name |
-               Where-Object { $_ -match '^\d+$' } | Measure-Object -Maximum).Maximum + 1
-    if (-not $nextId) { $nextId = 1 }
-    New-ItemProperty -Path $edgeExtPath -Name $nextId -Value $1pExtId -PropertyType String -Force | Out-Null
-    Write-Success "1Password Edge extension will install on next Edge launch"
-} else {
-    Write-Success "1Password Edge extension configured"
+# Force-install 1Password Edge extension via policy (may fail on managed machines)
+try {
+    $edgeExtPath = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
+    $1pExtId = "dppgmdbiimibapkepcbdbmkaabgiofem;https://edge.microsoft.com/extensionwebstorebase/v1/crx"
+    if (-not (Test-Path $edgeExtPath)) {
+        New-Item -Path $edgeExtPath -Force | Out-Null
+    }
+    $existingExts = Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue
+    $1pExtInstalled = $existingExts.PSObject.Properties.Value -contains $1pExtId
+    if (-not $1pExtInstalled) {
+        $nextId = ((Get-ItemProperty -Path $edgeExtPath -ErrorAction SilentlyContinue).PSObject.Properties.Name |
+                   Where-Object { $_ -match '^\d+$' } | Measure-Object -Maximum).Maximum + 1
+        if (-not $nextId) { $nextId = 1 }
+        New-ItemProperty -Path $edgeExtPath -Name $nextId -Value $1pExtId -PropertyType String -Force | Out-Null
+        Write-Success "1Password Edge extension will install on next Edge launch"
+    } else {
+        Write-Success "1Password Edge extension configured"
+    }
+} catch {
+    Write-Host "    [SKIP] Edge extension policy (access denied on managed machine)" -ForegroundColor Yellow
 }
 
 if (-not $1pInstalled) {
@@ -351,19 +370,25 @@ Write-Success "Git configured to use Windows OpenSSH"
 
 # Add GitHub's SSH host key to known_hosts (avoid interactive prompt)
 $knownHosts = "$sshDir\known_hosts"
-if (-not (Test-Path $knownHosts) -or -not (Select-String -Path $knownHosts -Pattern "github\.com" -Quiet)) {
+$needsGithubKey = $true
+if (Test-Path $knownHosts) {
+    $hasGithub = Select-String -Path $knownHosts -Pattern "github\.com" -Quiet -ErrorAction SilentlyContinue
+    if ($hasGithub) { $needsGithubKey = $false }
+}
+if ($needsGithubKey) {
     Write-Host "    Adding GitHub to known_hosts..."
-    $knownHostsUrl = "https://raw.githubusercontent.com/contractcooker/dotfiles/main/home/.ssh/known_hosts"
-    $ProgressPreference = 'SilentlyContinue'
+    # GitHub's official SSH host keys
+    $githubKeys = @"
+github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+"@
     try {
-        Invoke-WebRequest -Uri $knownHostsUrl -OutFile $knownHosts
-        $ProgressPreference = 'Continue'
+        $githubKeys | Out-File -FilePath $knownHosts -Encoding utf8 -Append -ErrorAction Stop
         Write-Success "GitHub host keys added"
     } catch {
-        $ProgressPreference = 'Continue'
-        # Fallback to ssh-keyscan if download fails
-        ssh-keyscan -t ed25519 github.com 2>$null >> $knownHosts
-        Write-Success "GitHub host key added (via keyscan)"
+        Write-Host "    [WARN] Could not write known_hosts: $_" -ForegroundColor Yellow
+        Write-Host "    You may be prompted to verify GitHub's host key on first connect" -ForegroundColor DarkGray
     }
 }
 
@@ -666,7 +691,7 @@ if (-not $SkipPackages) {
     $installScript = "$ScriptDir\install-packages.ps1"
     if (Test-Path $installScript) {
         if ($All) {
-            & $installScript -Profile $Profile -BaseOnly
+            & $installScript -Profile $SetupProfile -BaseOnly
         } else {
             # Check for gum
             $hasGum = (Test-Path "$env:USERPROFILE\scoop\shims\gm.exe") -or
@@ -680,16 +705,16 @@ if (-not $SkipPackages) {
                 }
                 $confirm = "Yes", "No" | & $gumExe choose --header "Install optional packages now?"
                 if ($confirm -eq "Yes") {
-                    & $installScript -Profile $Profile
+                    & $installScript -Profile $SetupProfile
                 } else {
-                    Write-Skip "Run install-packages.ps1 -Profile $Profile later"
+                    Write-Skip "Run install-packages.ps1 -Profile $SetupProfile later"
                 }
             } else {
                 $reply = Read-Host "    Install optional packages? [y/N]"
                 if ($reply -match "^[Yy]") {
-                    & $installScript -Profile $Profile
+                    & $installScript -Profile $SetupProfile
                 } else {
-                    Write-Skip "Run install-packages.ps1 -Profile $Profile later"
+                    Write-Skip "Run install-packages.ps1 -Profile $SetupProfile later"
                 }
             }
         }
@@ -701,7 +726,7 @@ if (-not $SkipPackages) {
 # =============================================================================
 Write-Step 14 $TotalSteps "Dropbox"
 
-if ($Profile -eq "Server") {
+if ($SetupProfile -eq "Server") {
     Write-Skip "Dropbox skipped (Server profile)"
 } else {
     $dropboxInstalled = winget list --id Dropbox.Dropbox 2>$null | Select-String "Dropbox"
