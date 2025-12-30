@@ -39,6 +39,16 @@ git clone https://github.com/contractcooker/config.git
 git clone https://github.com/contractcooker/dotfiles.git
 ```
 
+**Fix PowerShell profile** (if not linked):
+
+```powershell
+# Find your repos location
+$dotfiles = if (Test-Path "$env:USERPROFILE\source\repos") { "$env:USERPROFILE\source\repos\dev\dotfiles" } else { "$env:USERPROFILE\repos\dev\dotfiles" }
+# Create profile directory and symlink
+mkdir -Force (Split-Path $PROFILE)
+New-Item -ItemType SymbolicLink -Path $PROFILE -Target "$dotfiles\home\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" -Force
+```
+
 See [Windows Setup](docs/windows-setup.md) for full guide.
 
 ## Contents
