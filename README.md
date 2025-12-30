@@ -28,6 +28,15 @@ For non-interactive install (everything): `| zsh -s -- --all`
 irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} | iex
 ```
 
+**Dry Run** - Preview what will be installed without making changes:
+
+```powershell
+# Download script first, then run with -DryRun
+irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/setup-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} -OutFile setup-windows.ps1
+.\setup-windows.ps1 -DryRun
+.\setup-windows.ps1 -SetupProfile Work -DryRun
+```
+
 **Troubleshooting:** If repos fail to clone (SSH issues, corporate network):
 
 ```powershell

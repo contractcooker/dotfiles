@@ -25,13 +25,16 @@
 #   .\setup-windows.ps1 -SetupProfile Work              # Specify profile
 #   .\setup-windows.ps1 -ReposPath "C:\source\repos"    # Custom repos location
 #   .\setup-windows.ps1 -All                            # Non-interactive
+#   .\setup-windows.ps1 -DryRun                         # Preview without changes
+#   .\setup-windows.ps1 -SetupProfile Work -DryRun      # Preview Work profile
 
 param(
     [string]$SetupProfile,
     [string]$ReposPath,
     [switch]$All,
     [switch]$SkipPackages,
-    [switch]$SkipRepos
+    [switch]$SkipRepos,
+    [switch]$DryRun
 )
 
 # Validate SetupProfile if provided
@@ -203,6 +206,120 @@ Write-Success "Profile: $SetupProfile"
 
 # Store profile for later use
 $script:SelectedProfile = $SetupProfile
+
+# =============================================================================
+# DRY RUN MODE
+# =============================================================================
+if ($DryRun) {
+    Write-Host ""
+    Write-Host "======================================" -ForegroundColor Yellow
+    Write-Host "  DRY RUN - No changes will be made" -ForegroundColor Yellow
+    Write-Host "======================================" -ForegroundColor Yellow
+    Write-Host ""
+
+    # Define categories per profile
+    $profileCategories = @{
+        "Personal" = @("base", "desktop", "dev", "gaming", "personal", "browser", "communication", "utility")
+        "Work"     = @("base", "desktop", "dev", "browser", "communication", "utility")
+        "Server"   = @("base")
+    }
+    $categories = $profileCategories[$SetupProfile]
+
+    # Special handling: Work profile skips Dropbox
+    $skipPackages = @()
+    if ($SetupProfile -eq "Work") {
+        $skipPackages += "Dropbox.Dropbox"
+    }
+
+    Write-Host "Profile: $SetupProfile" -ForegroundColor Cyan
+    Write-Host "Categories: $($categories -join ', ')" -ForegroundColor Cyan
+    Write-Host ""
+
+    # Parse Winfile if it exists
+    $winfilePath = "$DotfilesPath\Winfile"
+    if (-not (Test-Path $winfilePath)) {
+        # Try common locations during bootstrap
+        $winfilePath = "$env:USERPROFILE\repos\dev\dotfiles\Winfile"
+        if (-not (Test-Path $winfilePath)) {
+            $winfilePath = "$env:USERPROFILE\source\repos\dev\dotfiles\Winfile"
+        }
+    }
+
+    if (Test-Path $winfilePath) {
+        Write-Host "Packages to install:" -ForegroundColor Green
+        Write-Host ""
+
+        $winfileContent = Get-Content $winfilePath
+        $packagesByCategory = @{}
+
+        foreach ($line in $winfileContent) {
+            # Match lines like: scoop "package" # [category] Description
+            if ($line -match '^(scoop|winget)\s+"([^"]+)"\s+#\s+\[(\w+)\]\s*(.*)') {
+                $manager = $Matches[1]
+                $package = $Matches[2]
+                $category = $Matches[3]
+                $description = $Matches[4]
+
+                if ($categories -contains $category) {
+                    if ($skipPackages -contains $package) {
+                        continue
+                    }
+                    if (-not $packagesByCategory[$category]) {
+                        $packagesByCategory[$category] = @()
+                    }
+                    $packagesByCategory[$category] += @{
+                        Manager = $manager
+                        Package = $package
+                        Description = $description
+                    }
+                }
+            }
+        }
+
+        foreach ($cat in $categories) {
+            if ($packagesByCategory[$cat]) {
+                Write-Host "  [$cat]" -ForegroundColor Cyan
+                foreach ($pkg in $packagesByCategory[$cat]) {
+                    $desc = if ($pkg.Description) { " - $($pkg.Description)" } else { "" }
+                    Write-Host "    $($pkg.Manager): $($pkg.Package)$desc"
+                }
+                Write-Host ""
+            }
+        }
+    } else {
+        Write-Host "  (Winfile not found - packages will be determined after cloning repos)" -ForegroundColor Yellow
+        Write-Host ""
+    }
+
+    Write-Host "Steps that would run:" -ForegroundColor Green
+    Write-Host "   1. Install Scoop package manager"
+    Write-Host "   2. Profile selection (already done: $SetupProfile)"
+    Write-Host "   3. Install 1Password"
+    Write-Host "   4. Configure 1Password SSH agent"
+    Write-Host "   5. Install core CLI tools (git, gh, jq, gum, fnm, uv, starship)"
+    Write-Host "   6. Authenticate GitHub CLI"
+    Write-Host "   7. Clone config + dotfiles repos"
+    Write-Host "   8. Link PowerShell profile"
+    Write-Host "   9. Install Node.js + Claude Code"
+    Write-Host "  10. Configure Git + SSH from config repo"
+    Write-Host "  11. Install Python via uv"
+    Write-Host "  12. Clone all repos from manifest"
+    Write-Host "  13. Install optional packages (interactive)"
+    if ($SetupProfile -eq "Personal") {
+        Write-Host "  14. Install + configure Dropbox"
+    } else {
+        Write-Host "  14. Dropbox (skipped for $SetupProfile profile)"
+    }
+    Write-Host "  15. Configure Windows preferences"
+    Write-Host "  16. Hardware detection (NVIDIA/ASUS)"
+    Write-Host ""
+    Write-Host "======================================" -ForegroundColor Yellow
+    Write-Host "  End of dry run" -ForegroundColor Yellow
+    Write-Host "======================================" -ForegroundColor Yellow
+
+    Stop-Transcript | Out-Null
+    exit 0
+}
 
 # =============================================================================
 # 3. 1PASSWORD
