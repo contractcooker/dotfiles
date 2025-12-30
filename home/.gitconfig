@@ -10,13 +10,14 @@
     path = ~/.gitconfig.local
 
 [init]
-    defaultBranch = main
+	defaultBranch = main
 
 [core]
-    autocrlf = input
+	autocrlf = true
     editor = code --wait
     pager = less -FX
 
+	sshCommand = C:/Windows/System32/OpenSSH/ssh.exe
 [pull]
     rebase = false
 
@@ -68,3 +69,8 @@
     smudge = git-lfs smudge -- %f
     process = git-lfs filter-process
     required = true
+[user]
+	name = Thomas Barron
+	email = barron.tom@gmail.com
+[credential "https://devops.build.intel.com"]
+	provider = generic
