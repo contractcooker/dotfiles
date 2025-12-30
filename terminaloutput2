@@ -1,9 +1,0 @@
-C:\Users\barrontx\source\repos\dev> gh config set git_protocol https
-C:\Users\barrontx\source\repos\dev> cd $env:USERPROFILE\source\repos\dev
-C:\Users\barrontx\source\repos\dev> rm -r config, dotfiles -ErrorAction SilentlyContinue
-C:\Users\barrontx\source\repos\dev> gh repo clone config
-Cloning into 'config'...
-The authenticity of host 'github.com (140.82.116.3)' can't be established.
-ED25519 key fingerprint is SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])?

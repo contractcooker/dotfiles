@@ -1,9 +1,0 @@
-C:\Users\barrontx\source\repos\dev> mkdir -Force $env:USERPROFILE\.ssh; "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" | Out-File $env:USERPROFILE\.ssh\known_hosts -Encoding utf8
-
-    Directory: C:\Users\barrontx
-
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------ ----
-d----          12/29/2025  5:51 PM                .ssh
-Out-File: Could not find a part of the path 'C:\Users\barrontx\.ssh\known_hosts'.
-C:\Users\barrontx\source\repos\dev>
