@@ -85,6 +85,41 @@ This repository contains cross-cutting development environment concerns that app
 - Editor and tool preferences
 - New machine setup automation
 
+## Decommission
+
+When returning a work machine or doing a clean slate, use the decommission script to remove all personal data:
+
+```powershell
+# Preview what will be removed
+.\scripts\decommission-windows.ps1 -DryRun
+
+# Interactive - confirms each step
+.\scripts\decommission-windows.ps1
+
+# Remove everything without prompts (use with caution)
+.\scripts\decommission-windows.ps1 -All
+```
+
+**What it removes:**
+
+| Step | Description |
+|------|-------------|
+| Repositories | `~/repos` and `~/source/repos` |
+| Git config | `.gitconfig`, `.gitconfig.local`, credential cache |
+| SSH config | `~/.ssh` directory |
+| PowerShell | Profile symlink, Starship config |
+| GitHub CLI | Logout and clear auth |
+| Scoop | All packages and Scoop itself |
+| Winget apps | Apps installed by setup script |
+| Claude Code | Config directory and npm package |
+
+**Manual steps required after:**
+- Sign out of 1Password
+- Clear browser data (history, passwords, cookies)
+- Sign out of JetBrains IDEs
+- Check Windows Credential Manager
+- Review Documents/Desktop/Downloads for personal files
+
 ## Documentation
 
 ### Platform Setup
