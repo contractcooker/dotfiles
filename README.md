@@ -58,6 +58,13 @@ mkdir -Force (Split-Path $PROFILE)
 New-Item -ItemType SymbolicLink -Path $PROFILE -Target "$dotfiles\home\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" -Force
 ```
 
+**Decommission** - Remove all repos, configs, and apps when returning a machine:
+
+```powershell
+.\scripts\decommission-windows.ps1 -DryRun   # Preview what will be removed
+.\scripts\decommission-windows.ps1           # Interactive, confirm each step
+```
+
 See [Windows Setup](docs/windows-setup.md) for full guide.
 
 ## Contents
