@@ -179,8 +179,35 @@ foreach ($repoPath in $repoPaths) {
             if ($DryRun) {
                 Write-DryRun "Would remove $repoPath"
             } else {
-                Remove-Item -Path $repoPath -Recurse -Force
-                Write-Success "Removed $repoPath"
+                $deleted = $false
+                $attempts = 0
+                while (-not $deleted -and $attempts -lt 3) {
+                    try {
+                        Remove-Item -Path $repoPath -Recurse -Force -ErrorAction Stop
+                        Write-Success "Removed $repoPath"
+                        $deleted = $true
+                    } catch {
+                        $attempts++
+                        Write-Host ""
+                        Write-Host "    ERROR: Cannot delete - files are locked by another process" -ForegroundColor Red
+                        Write-Host "    Common causes:" -ForegroundColor Yellow
+                        Write-Host "      - VS Code or editor open in this directory"
+                        Write-Host "      - Windows Terminal with working directory here"
+                        Write-Host "      - File Explorer browsing this folder"
+                        Write-Host ""
+
+                        if ($attempts -lt 3) {
+                            $retry = Read-Host "    Close those apps and press Enter to retry, or 's' to skip"
+                            if ($retry -eq 's' -or $retry -eq 'S') {
+                                Write-Skip "Skipped $repoPath (manually delete later)"
+                                break
+                            }
+                        } else {
+                            Write-Host "    Max retries reached." -ForegroundColor Red
+                            Write-Skip "Skipped $repoPath (manually delete later)"
+                        }
+                    }
+                }
             }
         } else {
             Write-Skip "Kept $repoPath"
