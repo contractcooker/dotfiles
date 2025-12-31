@@ -17,6 +17,37 @@ param(
 $ErrorActionPreference = "Stop"
 
 # =============================================================================
+# LOGGING
+# =============================================================================
+$LogDir = "$env:TEMP\dotfiles-decommission-logs"
+$LogFile = "$LogDir\decommission-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+}
+
+Start-Transcript -Path $LogFile | Out-Null
+Write-Host "Logging to: $LogFile" -ForegroundColor DarkGray
+Write-Host "PowerShell version: $($PSVersionTable.PSVersion)" -ForegroundColor DarkGray
+Write-Host "Script path: $($MyInvocation.MyCommand.Path)" -ForegroundColor DarkGray
+Write-Host "Working directory: $(Get-Location)" -ForegroundColor DarkGray
+Write-Host "Relocated flag: $Relocated" -ForegroundColor DarkGray
+Write-Host "DryRun flag: $DryRun" -ForegroundColor DarkGray
+Write-Host "All flag: $All" -ForegroundColor DarkGray
+Write-Host ""
+
+trap {
+    Write-Host ""
+    Write-Host "ERROR: $_" -ForegroundColor Red
+    Write-Host "Line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+    Write-Host "Command: $($_.InvocationInfo.Line.Trim())" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Log saved to: $LogFile" -ForegroundColor Yellow
+    Stop-Transcript | Out-Null
+    break
+}
+
+# =============================================================================
 # RELOCATE IF RUNNING FROM REPOS
 # =============================================================================
 # If running from within a repos directory, copy to temp and re-launch
@@ -462,3 +493,6 @@ if (-not $DryRun) {
     Write-Host "Restart your computer to complete cleanup." -ForegroundColor Yellow
     Write-Host ""
 }
+
+Write-Host "Log saved to: $LogFile" -ForegroundColor DarkGray
+Stop-Transcript | Out-Null
