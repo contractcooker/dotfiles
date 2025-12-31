@@ -10,10 +10,58 @@
 
 param(
     [switch]$DryRun,
-    [switch]$All
+    [switch]$All,
+    [switch]$Relocated  # Internal flag - set when running from temp location
 )
 
 $ErrorActionPreference = "Stop"
+
+# =============================================================================
+# RELOCATE IF RUNNING FROM REPOS
+# =============================================================================
+# If running from within a repos directory, copy to temp and re-launch
+# This allows the script to delete the repos directory
+
+$repoPaths = @(
+    "$env:USERPROFILE\repos",
+    "$env:USERPROFILE\source\repos"
+)
+
+$scriptPath = $MyInvocation.MyCommand.Path
+$runningFromRepos = $false
+
+if ($scriptPath -and -not $Relocated) {
+    foreach ($repoPath in $repoPaths) {
+        if ($scriptPath -like "$repoPath*") {
+            $runningFromRepos = $true
+            break
+        }
+    }
+
+    if ($runningFromRepos) {
+        Write-Host ""
+        Write-Host "Detected: Running from within repos directory" -ForegroundColor Yellow
+        Write-Host "Relocating script to temp directory..." -ForegroundColor Yellow
+
+        $tempScript = "$env:TEMP\decommission-windows.ps1"
+        Copy-Item -Path $scriptPath -Destination $tempScript -Force
+
+        # Build args to pass through
+        $args = @("-Relocated")
+        if ($DryRun) { $args += "-DryRun" }
+        if ($All) { $args += "-All" }
+
+        Write-Host "Re-launching from: $tempScript" -ForegroundColor Yellow
+        Write-Host ""
+
+        # Change to a safe directory before re-launching
+        Set-Location $env:USERPROFILE
+
+        # Re-launch and exit this instance
+        & powershell -ExecutionPolicy Bypass -File $tempScript @args
+        exit $LASTEXITCODE
+    }
+}
 
 function Write-Step {
     param([string]$Message)
@@ -85,11 +133,7 @@ if (-not $All -and -not $DryRun) {
 # =============================================================================
 Write-Step "1. Repositories"
 
-$repoPaths = @(
-    "$env:USERPROFILE\repos",
-    "$env:USERPROFILE\source\repos"
-)
-
+# $repoPaths already defined at top of script
 foreach ($repoPath in $repoPaths) {
     if (Test-Path $repoPath) {
         Write-Action "Found: $repoPath"
