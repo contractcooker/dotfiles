@@ -90,14 +90,11 @@ This repository contains cross-cutting development environment concerns that app
 When returning a work machine or doing a clean slate, use the decommission script to remove all personal data:
 
 ```powershell
-# Preview what will be removed
-.\scripts\decommission-windows.ps1 -DryRun
+# Download and run (interactive, confirms each step)
+irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/decommission-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} -OutFile "$env:TEMP\decommission-windows.ps1"; & "$env:TEMP\decommission-windows.ps1"
 
-# Interactive - confirms each step
-.\scripts\decommission-windows.ps1
-
-# Remove everything without prompts (use with caution)
-.\scripts\decommission-windows.ps1 -All
+# Dry run - preview what will be removed
+irm "https://api.github.com/repos/contractcooker/dotfiles/contents/scripts/decommission-windows.ps1" -Headers @{Accept="application/vnd.github.v3.raw"} -OutFile "$env:TEMP\decommission-windows.ps1"; & "$env:TEMP\decommission-windows.ps1" -DryRun
 ```
 
 **What it removes:**
